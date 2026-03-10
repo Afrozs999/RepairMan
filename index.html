@@ -1,1322 +1,2250 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>FixMate – Your Trusted Repair Partner</title>
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --blue: #2563EB;
-    --blue-dark: #1d4ed8;
-    --blue-light: #EFF6FF;
-    --orange: #F97316;
-    --orange-dark: #ea6c0a;
-    --bg: #F8FAFC;
-    --card: #FFFFFF;
-    --text: #111827;
-    --text2: #6B7280;
-    --text3: #9CA3AF;
-    --success: #22C55E;
-    --error: #EF4444;
-    --border: #E5E7EB;
-    --radius: 16px;
-    --shadow: 0 2px 12px rgba(0,0,0,0.08);
-    --shadow-md: 0 4px 24px rgba(0,0,0,0.12);
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+import { useState, useEffect, useRef } from "react";
+
+// ============================================================
+// DESIGN TOKENS & THEME
+// ============================================================
+const theme = {
+  primary: "#1A73E8",
+  primaryDark: "#1557B0",
+  primaryLight: "#E8F0FE",
+  accent: "#FF8A00",
+  accentLight: "#FFF3E0",
+  success: "#00C853",
+  danger: "#F44336",
+  warning: "#FFC107",
+  bg: "#F8FAFF",
+  white: "#FFFFFF",
+  dark: "#1C1C2E",
+  grey: "#6B7280",
+  greyLight: "#F3F4F6",
+  border: "#E5E7EB",
+  shadow: "0 4px 24px rgba(26,115,232,0.10)",
+  shadowMd: "0 8px 40px rgba(26,115,232,0.13)",
+  radius: "16px",
+  radiusSm: "10px",
+  radiusLg: "24px",
+};
+
+const styles = `
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+  
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
   body {
-    font-family: 'DM Sans', sans-serif;
-    background: #1a1a2e;
-    display: flex; justify-content: center; align-items: center;
+    font-family: 'Poppins', sans-serif;
+    background: #F0F4FF;
+    color: #1C1C2E;
+    min-height: 100vh;
+  }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: #f1f1f1; }
+  ::-webkit-scrollbar-thumb { background: #1A73E8; border-radius: 4px; }
+
+  .fixmate-root {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
     min-height: 100vh;
     padding: 20px;
+    gap: 20px;
+    background: linear-gradient(135deg, #0A1628 0%, #1A2744 50%, #0D1F3C 100%);
+    flex-wrap: wrap;
   }
-  .phone {
+
+  /* ── PHONE FRAME ── */
+  .phone-frame {
     width: 390px;
-    height: 844px;
-    background: var(--bg);
+    height: 780px;
+    background: #fff;
     border-radius: 44px;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.5), inset 0 0 0 2px rgba(255,255,255,0.15);
     overflow: hidden;
     position: relative;
-    box-shadow: 0 30px 80px rgba(0,0,0,0.5), 0 0 0 2px rgba(255,255,255,0.1);
-  }
-  /* SCREENS */
-  .screen {
-    position: absolute; inset: 0;
-    overflow-y: auto; overflow-x: hidden;
-    display: none;
-    flex-direction: column;
-    background: var(--bg);
-    scrollbar-width: none;
-    padding-bottom: 80px;
-  }
-  .screen::-webkit-scrollbar { display: none; }
-  .screen.active { display: flex; }
-
-  /* SPLASH */
-  #splash {
-    background: linear-gradient(145deg, #2563EB 0%, #1d4ed8 40%, #F97316 100%);
-    justify-content: center; align-items: center;
-    padding: 0;
-    animation: splashIn 0.6s ease;
-  }
-  @keyframes splashIn { from { opacity: 0; transform: scale(1.1); } to { opacity: 1; transform: scale(1); } }
-  .splash-content { text-align: center; }
-  .splash-logo {
-    width: 100px; height: 100px;
-    background: rgba(255,255,255,0.2);
-    border-radius: 28px;
-    display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 24px;
-    backdrop-filter: blur(10px);
-    border: 2px solid rgba(255,255,255,0.3);
-    animation: logoFloat 2s ease-in-out infinite;
-  }
-  @keyframes logoFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
-  .splash-logo svg { width: 56px; height: 56px; }
-  .splash-title {
-    font-family: 'Nunito', sans-serif;
-    font-size: 42px; font-weight: 900;
-    color: white; letter-spacing: -1px;
-  }
-  .splash-sub { color: rgba(255,255,255,0.85); font-size: 16px; margin-top: 8px; font-weight: 500; }
-  .splash-dots { display: flex; gap: 8px; justify-content: center; margin-top: 48px; }
-  .splash-dots span {
-    width: 8px; height: 8px; border-radius: 50%;
-    background: rgba(255,255,255,0.4);
-    animation: dotPulse 1.4s ease-in-out infinite;
-  }
-  .splash-dots span:nth-child(2) { animation-delay: 0.2s; }
-  .splash-dots span:nth-child(3) { animation-delay: 0.4s; }
-  @keyframes dotPulse { 0%,80%,100% { transform: scale(0.8); opacity: 0.4; } 40% { transform: scale(1.2); opacity: 1; } }
-
-  /* LOGIN */
-  #login { padding: 0; justify-content: flex-start; }
-  .login-hero {
-    background: linear-gradient(160deg, #2563EB, #1e40af);
-    padding: 60px 28px 48px;
-    position: relative; overflow: hidden;
-  }
-  .login-hero::before {
-    content: ''; position: absolute;
-    width: 200px; height: 200px;
-    background: rgba(255,255,255,0.06);
-    border-radius: 50%; top: -60px; right: -40px;
-  }
-  .login-hero::after {
-    content: ''; position: absolute;
-    width: 120px; height: 120px;
-    background: rgba(249,115,22,0.3);
-    border-radius: 50%; bottom: -30px; left: 20px;
-  }
-  .login-hero h1 { font-family:'Nunito',sans-serif; font-size:32px; font-weight:900; color:white; position:relative; z-index:1; }
-  .login-hero p { color:rgba(255,255,255,0.75); margin-top:8px; font-size:15px; position:relative; z-index:1; }
-  .login-body { padding: 32px 24px; }
-  .input-group { margin-bottom: 16px; }
-  .input-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text2); margin-bottom: 8px; }
-  .input-wrap {
-    display: flex; align-items: center; gap: 12px;
-    background: white; border: 1.5px solid var(--border);
-    border-radius: 14px; padding: 14px 16px;
-    transition: border-color 0.2s;
-  }
-  .input-wrap:focus-within { border-color: var(--blue); }
-  .input-wrap input { border: none; outline: none; flex: 1; font-size: 15px; font-family: 'DM Sans'; color: var(--text); background: transparent; }
-  .input-wrap svg { color: var(--text3); flex-shrink: 0; }
-  .btn-orange {
-    width: 100%; padding: 16px;
-    background: var(--orange); color: white;
-    border: none; border-radius: 14px;
-    font-size: 16px; font-weight: 700;
-    font-family: 'Nunito', sans-serif;
-    cursor: pointer; transition: all 0.2s;
-    box-shadow: 0 4px 16px rgba(249,115,22,0.35);
-    position: relative; overflow: hidden;
-  }
-  .btn-orange:active { transform: scale(0.97); }
-  .divider { display: flex; align-items: center; gap: 12px; margin: 20px 0; }
-  .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-  .divider span { font-size: 13px; color: var(--text3); }
-  .btn-google {
-    width: 100%; padding: 15px;
-    background: white; border: 1.5px solid var(--border);
-    border-radius: 14px; font-size: 15px; font-weight: 600;
-    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
-    color: var(--text); transition: all 0.2s;
-  }
-  .btn-google:active { background: #f9fafb; transform: scale(0.97); }
-  .login-footer { text-align: center; margin-top: 24px; font-size: 13px; color: var(--text2); }
-  .login-footer a { color: var(--blue); font-weight: 600; cursor: pointer; }
-
-  /* TOP BAR */
-  .topbar {
-    background: var(--blue);
-    padding: 52px 20px 16px;
-    position: sticky; top: 0; z-index: 10;
-  }
-  .topbar-row1 { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
-  .location { display: flex; align-items: center; gap: 6px; color: white; cursor: pointer; }
-  .location svg { width: 16px; height: 16px; opacity: 0.8; }
-  .location-text { font-size: 14px; font-weight: 600; }
-  .location-sub { font-size: 11px; opacity: 0.7; margin-top: 1px; }
-  .notif-btn {
-    width: 38px; height: 38px;
-    background: rgba(255,255,255,0.15);
-    border-radius: 12px; border: none;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; position: relative;
-  }
-  .notif-dot {
-    position: absolute; top: 8px; right: 8px;
-    width: 8px; height: 8px; background: var(--orange);
-    border-radius: 50%; border: 2px solid var(--blue);
-  }
-  .searchbar {
-    display: flex; align-items: center; gap: 10px;
-    background: white; border-radius: 12px;
-    padding: 11px 14px;
-  }
-  .searchbar input {
-    border: none; outline: none; flex: 1;
-    font-size: 14px; color: var(--text); background: transparent;
-    font-family: 'DM Sans';
-  }
-  .searchbar input::placeholder { color: var(--text3); }
-
-  /* SECTION */
-  .section { padding: 20px 16px 0; }
-  .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
-  .section-title { font-family: 'Nunito', sans-serif; font-size: 18px; font-weight: 800; color: var(--text); }
-  .section-link { font-size: 13px; color: var(--blue); font-weight: 600; cursor: pointer; }
-
-  /* CATEGORIES */
-  .categories-scroll { display: flex; gap: 10px; overflow-x: auto; padding: 0 16px 4px; scrollbar-width: none; }
-  .categories-scroll::-webkit-scrollbar { display: none; }
-  .cat-card {
     flex-shrink: 0;
-    width: 82px;
-    background: white;
-    border-radius: 16px;
-    padding: 14px 8px;
-    text-align: center;
-    box-shadow: var(--shadow);
-    cursor: pointer;
-    transition: all 0.2s;
-    border: 1.5px solid transparent;
-  }
-  .cat-card:active, .cat-card.active { border-color: var(--blue); background: var(--blue-light); transform: scale(0.96); }
-  .cat-icon {
-    width: 44px; height: 44px;
-    border-radius: 12px;
-    display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 8px;
-    font-size: 22px;
-  }
-  .cat-name { font-size: 11px; font-weight: 600; color: var(--text); line-height: 1.3; }
-
-  /* EXPERT CARDS */
-  .experts-scroll { display: flex; gap: 12px; overflow-x: auto; padding: 0 16px 4px; scrollbar-width: none; }
-  .experts-scroll::-webkit-scrollbar { display: none; }
-  .expert-card {
-    flex-shrink: 0; width: 160px;
-    background: white; border-radius: var(--radius);
-    padding: 16px; box-shadow: var(--shadow);
-    cursor: pointer; transition: all 0.2s;
-    position: relative;
-  }
-  .expert-card:active { transform: scale(0.97); box-shadow: var(--shadow-md); }
-  .expert-badge {
-    position: absolute; top: 10px; right: 10px;
-    background: var(--success); color: white;
-    font-size: 9px; font-weight: 700;
-    padding: 2px 7px; border-radius: 20px;
-  }
-  .expert-avatar {
-    width: 56px; height: 56px; border-radius: 16px;
-    background: linear-gradient(135deg, #dbeafe, #bfdbfe);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 28px; margin-bottom: 10px;
-  }
-  .expert-name { font-family: 'Nunito', sans-serif; font-size: 14px; font-weight: 800; color: var(--text); }
-  .expert-type { font-size: 12px; color: var(--text2); margin: 2px 0 8px; }
-  .expert-meta { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
-  .rating { display: flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 600; color: #D97706; }
-  .distance { font-size: 11px; color: var(--text3); margin-left: auto; }
-  .btn-book {
-    width: 100%; padding: 9px;
-    background: var(--orange); color: white;
-    border: none; border-radius: 10px;
-    font-size: 12px; font-weight: 700;
-    cursor: pointer; transition: all 0.2s;
-    font-family: 'Nunito', sans-serif;
-  }
-  .btn-book:active { transform: scale(0.97); }
-
-  /* PROMO BANNER */
-  .promo-banner {
-    margin: 16px;
-    background: linear-gradient(135deg, #1d4ed8, #2563EB);
-    border-radius: 20px;
-    padding: 20px;
-    display: flex; justify-content: space-between; align-items: center;
-    position: relative; overflow: hidden;
-  }
-  .promo-banner::after {
-    content: ''; position: absolute;
-    width: 120px; height: 120px;
-    background: rgba(255,255,255,0.06);
-    border-radius: 50%; right: -20px; top: -30px;
-  }
-  .promo-text h3 { font-family: 'Nunito', sans-serif; font-size: 16px; font-weight: 800; color: white; }
-  .promo-text p { font-size: 12px; color: rgba(255,255,255,0.75); margin-top: 4px; }
-  .promo-tag {
-    background: var(--orange); color: white;
-    padding: 8px 14px; border-radius: 10px;
-    font-size: 13px; font-weight: 800;
-    font-family: 'Nunito', sans-serif;
-    position: relative; z-index: 1;
+    border: 3px solid rgba(255,255,255,0.08);
   }
 
-  /* SERVICE LIST */
-  .service-card {
-    background: white; border-radius: var(--radius);
-    margin: 0 16px 12px; padding: 14px;
-    box-shadow: var(--shadow); display: flex; gap: 12px;
-    cursor: pointer; transition: all 0.2s;
-    border: 1.5px solid transparent;
-  }
-  .service-card:active { border-color: var(--blue); transform: scale(0.99); }
-  .service-img {
-    width: 80px; height: 80px; border-radius: 12px;
-    background: linear-gradient(135deg, #dbeafe, #bfdbfe);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 36px; flex-shrink: 0;
-  }
-  .service-info { flex: 1; }
-  .service-name { font-family: 'Nunito', sans-serif; font-size: 15px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
-  .service-price { font-size: 13px; font-weight: 600; color: var(--blue); margin-bottom: 6px; }
-  .service-meta { display: flex; align-items: center; gap: 10px; }
-  .badge-tag {
-    background: var(--blue-light); color: var(--blue);
-    font-size: 11px; font-weight: 600;
-    padding: 3px 8px; border-radius: 6px;
-  }
-  .btn-book-sm {
-    background: var(--orange); color: white;
-    border: none; border-radius: 9px;
-    padding: 7px 14px; font-size: 12px; font-weight: 700;
-    cursor: pointer; margin-top: 8px;
-    font-family: 'Nunito', sans-serif;
-  }
-  .filter-row {
-    display: flex; gap: 8px; overflow-x: auto;
-    padding: 12px 16px; scrollbar-width: none;
-  }
-  .filter-row::-webkit-scrollbar { display: none; }
-  .filter-chip {
-    flex-shrink: 0;
-    padding: 8px 16px;
-    border-radius: 20px; border: 1.5px solid var(--border);
-    background: white; font-size: 13px; font-weight: 600;
-    cursor: pointer; transition: all 0.2s; color: var(--text);
-  }
-  .filter-chip.active { background: var(--blue); color: white; border-color: var(--blue); }
-
-  /* DETAIL PAGE */
-  .detail-img {
-    width: 100%; height: 220px;
-    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 80px; flex-shrink: 0;
-    position: relative;
-  }
-  .back-btn {
-    position: absolute; top: 56px; left: 16px;
-    width: 40px; height: 40px;
-    background: white; border-radius: 12px;
-    border: none; display: flex; align-items: center; justify-content: center;
-    cursor: pointer; box-shadow: var(--shadow-md);
-  }
-  .detail-body { padding: 20px 16px; }
-  .detail-title { font-family: 'Nunito', sans-serif; font-size: 24px; font-weight: 900; color: var(--text); }
-  .detail-price { font-size: 20px; font-weight: 700; color: var(--blue); margin: 6px 0 12px; }
-  .detail-rating-row { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
-  .detail-rating { display: flex; align-items: center; gap: 4px; font-size: 15px; font-weight: 700; color: #D97706; }
-  .detail-reviews { font-size: 13px; color: var(--text2); }
-  .tech-row {
-    display: flex; align-items: center; gap: 12px;
-    background: var(--blue-light); border-radius: 14px; padding: 14px;
-    margin-bottom: 16px;
-  }
-  .tech-avatar {
-    width: 48px; height: 48px; border-radius: 14px;
-    background: linear-gradient(135deg, #2563EB, #1d4ed8);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 24px; flex-shrink: 0;
-  }
-  .tech-info { flex: 1; }
-  .tech-name { font-family: 'Nunito', sans-serif; font-weight: 800; color: var(--text); font-size: 15px; }
-  .tech-type { font-size: 12px; color: var(--text2); }
-  .section-desc { font-size: 14px; color: var(--text2); line-height: 1.6; margin-bottom: 20px; }
-  .upload-box {
-    border: 2px dashed var(--blue);
-    border-radius: 14px; padding: 24px;
-    text-align: center; cursor: pointer;
-    background: var(--blue-light); margin-bottom: 20px;
-    transition: all 0.2s;
-  }
-  .upload-box:active { transform: scale(0.98); }
-  .upload-box p { font-size: 13px; color: var(--blue); font-weight: 600; margin-top: 8px; }
-  .btn-confirm {
-    width: 100%; padding: 17px;
-    background: var(--orange); color: white;
-    border: none; border-radius: 14px;
-    font-size: 16px; font-weight: 700;
-    font-family: 'Nunito', sans-serif;
-    cursor: pointer; transition: all 0.2s;
-    box-shadow: 0 4px 16px rgba(249,115,22,0.35);
-  }
-  .btn-confirm:active { transform: scale(0.97); }
-
-  /* BOOKING */
-  .booking-section { padding: 16px 16px 0; }
-  .booking-section h3 { font-family: 'Nunito', sans-serif; font-size: 16px; font-weight: 800; color: var(--text); margin-bottom: 12px; }
-  .date-scroll { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
-  .date-scroll::-webkit-scrollbar { display: none; }
-  .date-chip {
-    flex-shrink: 0; text-align: center;
-    width: 56px; padding: 10px 6px;
-    background: white; border-radius: 12px;
-    border: 1.5px solid var(--border); cursor: pointer;
-    transition: all 0.2s;
-  }
-  .date-chip.active { background: var(--blue); border-color: var(--blue); }
-  .date-chip .day { font-size: 11px; color: var(--text2); }
-  .date-chip .date { font-family: 'Nunito', sans-serif; font-size: 18px; font-weight: 800; color: var(--text); }
-  .date-chip.active .day, .date-chip.active .date { color: white; }
-  .time-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-  .time-chip {
-    text-align: center; padding: 11px;
-    background: white; border-radius: 12px;
-    border: 1.5px solid var(--border); cursor: pointer;
-    font-size: 13px; font-weight: 600; color: var(--text);
-    transition: all 0.2s;
-  }
-  .time-chip.active { background: var(--blue); color: white; border-color: var(--blue); }
-  .time-chip.unavailable { opacity: 0.4; cursor: not-allowed; }
-
-  /* TRACKING */
-  .map-area {
-    height: 280px;
-    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 50%, #e0f2fe 100%);
-    position: relative; overflow: hidden;
-  }
-  .map-grid {
-    position: absolute; inset: 0;
-    background-image: linear-gradient(rgba(37,99,235,0.08) 1px, transparent 1px),
-                      linear-gradient(90deg, rgba(37,99,235,0.08) 1px, transparent 1px);
-    background-size: 40px 40px;
-  }
-  .map-pin {
-    position: absolute; bottom: 80px; left: 50%;
+  .phone-notch {
+    position: absolute;
+    top: 0; left: 50%;
     transform: translateX(-50%);
-    display: flex; flex-direction: column; align-items: center;
-  }
-  .map-pin-dot {
-    width: 48px; height: 48px;
-    background: var(--blue); border-radius: 50% 50% 50% 0;
-    transform: rotate(-45deg);
-    display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 4px 16px rgba(37,99,235,0.4);
-    animation: pinBounce 1.5s ease-in-out infinite;
-  }
-  @keyframes pinBounce { 0%,100% { transform: rotate(-45deg) translateY(0); } 50% { transform: rotate(-45deg) translateY(-6px); } }
-  .map-pin-dot span { transform: rotate(45deg); font-size: 22px; }
-  .map-tech-pin {
-    position: absolute; top: 80px; right: 80px;
-    width: 40px; height: 40px;
-    background: var(--orange); border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 20px; box-shadow: 0 4px 12px rgba(249,115,22,0.4);
-    animation: techMove 3s ease-in-out infinite;
-  }
-  @keyframes techMove { 0%,100% { transform: translate(0,0); } 50% { transform: translate(-10px, 10px); } }
-  .route-line {
-    position: absolute; top: 110px; right: 110px;
-    width: 2px; height: 140px;
-    background: repeating-linear-gradient(to bottom, var(--blue) 0, var(--blue) 8px, transparent 8px, transparent 14px);
-    transform: rotate(25deg); transform-origin: top;
-  }
-  .eta-card {
-    margin: 16px;
-    background: white; border-radius: var(--radius);
-    padding: 16px; box-shadow: var(--shadow);
-    display: flex; align-items: center; gap: 14px;
-  }
-  .eta-icon {
-    width: 52px; height: 52px;
-    background: var(--blue-light); border-radius: 14px;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-  }
-  .eta-text h3 { font-family: 'Nunito', sans-serif; font-size: 20px; font-weight: 900; color: var(--text); }
-  .eta-text p { font-size: 13px; color: var(--text2); }
-  .tracking-actions { display: flex; gap: 12px; padding: 0 16px; }
-  .track-btn {
-    flex: 1; padding: 14px;
-    border-radius: 14px; border: none;
-    font-size: 14px; font-weight: 700;
-    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
-    font-family: 'Nunito', sans-serif; transition: all 0.2s;
-  }
-  .track-btn.call { background: var(--success); color: white; }
-  .track-btn.chat { background: var(--blue); color: white; }
-  .track-btn:active { transform: scale(0.97); }
-
-  /* BOOKINGS */
-  .tab-row {
-    display: flex; padding: 16px 16px 0;
-    border-bottom: 1.5px solid var(--border);
-    gap: 24px;
-  }
-  .tab {
-    padding-bottom: 14px; font-size: 15px; font-weight: 600;
-    color: var(--text2); cursor: pointer; border-bottom: 2.5px solid transparent;
-    transition: all 0.2s;
-  }
-  .tab.active { color: var(--blue); border-bottom-color: var(--blue); }
-  .booking-card {
-    background: white; border-radius: var(--radius);
-    margin: 12px 16px 0; padding: 16px;
-    box-shadow: var(--shadow);
-  }
-  .booking-card-top { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
-  .booking-icon {
-    width: 48px; height: 48px; border-radius: 14px;
-    background: var(--blue-light);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 24px; flex-shrink: 0;
-  }
-  .booking-info { flex: 1; }
-  .booking-name { font-family: 'Nunito', sans-serif; font-size: 15px; font-weight: 800; color: var(--text); }
-  .booking-tech { font-size: 13px; color: var(--text2); margin-top: 2px; }
-  .status-badge {
-    padding: 5px 10px; border-radius: 8px;
-    font-size: 11px; font-weight: 700;
-  }
-  .status-active { background: #FEF3C7; color: #D97706; }
-  .status-done { background: #DCFCE7; color: #16A34A; }
-  .booking-footer { display: flex; align-items: center; gap: 8px; padding-top: 12px; border-top: 1px solid var(--border); }
-  .booking-date { font-size: 12px; color: var(--text3); flex: 1; }
-  .btn-track { background: var(--blue); color: white; border: none; border-radius: 8px; padding: 7px 14px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: 'Nunito', sans-serif; }
-
-  /* CHAT */
-  .chat-header {
-    background: var(--blue); padding: 52px 16px 16px;
-    display: flex; align-items: center; gap: 12px;
-  }
-  .chat-avatar {
-    width: 42px; height: 42px; border-radius: 14px;
-    background: rgba(255,255,255,0.2);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 22px;
-  }
-  .chat-info h3 { font-family: 'Nunito', sans-serif; font-size: 16px; font-weight: 800; color: white; }
-  .chat-info p { font-size: 12px; color: rgba(255,255,255,0.75); }
-  .chat-online { display: flex; align-items: center; gap: 4px; }
-  .online-dot { width: 7px; height: 7px; background: var(--success); border-radius: 50%; }
-  .chat-messages { flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
-  .msg { max-width: 75%; }
-  .msg.received { align-self: flex-start; }
-  .msg.sent { align-self: flex-end; }
-  .msg-bubble {
-    padding: 11px 14px; border-radius: 16px;
-    font-size: 14px; line-height: 1.5;
-  }
-  .msg.received .msg-bubble { background: white; color: var(--text); border-bottom-left-radius: 4px; box-shadow: var(--shadow); }
-  .msg.sent .msg-bubble { background: var(--blue); color: white; border-bottom-right-radius: 4px; }
-  .msg-time { font-size: 11px; color: var(--text3); margin-top: 4px; padding: 0 4px; }
-  .msg.sent .msg-time { text-align: right; }
-  .chat-input {
-    padding: 12px 16px;
-    display: flex; align-items: center; gap: 10px;
-    background: white; border-top: 1px solid var(--border);
-  }
-  .chat-input input {
-    flex: 1; border: 1.5px solid var(--border); border-radius: 24px;
-    padding: 11px 16px; font-size: 14px; outline: none;
-    font-family: 'DM Sans'; color: var(--text);
-    transition: border-color 0.2s;
-  }
-  .chat-input input:focus { border-color: var(--blue); }
-  .send-btn {
-    width: 44px; height: 44px;
-    background: var(--blue); border: none; border-radius: 14px;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; flex-shrink: 0; transition: all 0.2s;
-  }
-  .send-btn:active { transform: scale(0.95); }
-
-  /* PROFILE */
-  .profile-hero {
-    background: linear-gradient(160deg, #2563EB, #1d4ed8);
-    padding: 56px 20px 32px; text-align: center;
-  }
-  .profile-avatar {
-    width: 80px; height: 80px; border-radius: 24px;
-    background: rgba(255,255,255,0.2);
-    border: 3px solid rgba(255,255,255,0.4);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 40px; margin: 0 auto 14px;
-  }
-  .profile-name { font-family: 'Nunito', sans-serif; font-size: 22px; font-weight: 900; color: white; }
-  .profile-email { font-size: 13px; color: rgba(255,255,255,0.7); margin-top: 4px; }
-  .profile-stats { display: flex; justify-content: center; gap: 32px; margin-top: 20px; }
-  .stat { text-align: center; }
-  .stat-num { font-family: 'Nunito', sans-serif; font-size: 22px; font-weight: 900; color: white; }
-  .stat-label { font-size: 11px; color: rgba(255,255,255,0.65); }
-  .profile-menu { padding: 16px; }
-  .menu-item {
-    display: flex; align-items: center; gap: 14px;
-    background: white; border-radius: 14px; padding: 16px;
-    margin-bottom: 10px; cursor: pointer; transition: all 0.2s;
-    box-shadow: var(--shadow);
-  }
-  .menu-item:active { transform: scale(0.98); }
-  .menu-icon {
-    width: 42px; height: 42px; border-radius: 12px;
-    display: flex; align-items: center; justify-content: center; font-size: 20px;
-    flex-shrink: 0;
-  }
-  .menu-item h4 { font-weight: 700; color: var(--text); font-size: 15px; }
-  .menu-item p { font-size: 12px; color: var(--text2); margin-top: 2px; }
-  .menu-arrow { margin-left: auto; color: var(--text3); }
-
-  /* BOTTOM NAV */
-  .bottom-nav {
-    position: fixed; bottom: 0; left: 50%;
-    transform: translateX(-50%);
-    width: 390px; height: 76px;
-    background: white;
-    border-top: 1px solid var(--border);
-    display: flex; align-items: center;
-    padding: 0 8px 10px;
+    width: 130px; height: 34px;
+    background: #1C1C2E;
+    border-radius: 0 0 20px 20px;
     z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .phone-notch::before {
+    content: '';
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: #2a2a3e;
+    border: 2px solid #333;
+  }
+
+  .phone-screen {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+    padding-top: 34px;
+    position: relative;
+  }
+
+  .phone-screen::-webkit-scrollbar { display: none; }
+
+  /* ── ADMIN FRAME ── */
+  .admin-frame {
+    width: 960px;
+    max-width: 100%;
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.4);
+    overflow: hidden;
+    height: 780px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── STATUS BAR ── */
+  .status-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 20px 4px;
+    background: #1A73E8;
+    font-size: 11px;
+    font-weight: 600;
+    color: white;
+    letter-spacing: 0.3px;
+  }
+
+  /* ── HEADER ── */
+  .app-header {
+    background: linear-gradient(135deg, #1A73E8 0%, #1557B0 100%);
+    padding: 16px 20px 20px;
+    color: white;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .app-header::after {
+    content: '';
+    position: absolute;
+    bottom: -30px; right: -30px;
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.07);
+  }
+
+  .app-header::before {
+    content: '';
+    position: absolute;
+    top: -20px; right: 60px;
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    background: rgba(255,138,0,0.2);
+  }
+
+  /* ── BOTTOM NAV ── */
+  .bottom-nav {
+    position: sticky;
+    bottom: 0;
+    display: flex;
+    background: white;
+    border-top: 1px solid #E5E7EB;
+    padding: 8px 0 12px;
+    z-index: 50;
     box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
   }
-  .nav-item {
-    flex: 1; display: flex; flex-direction: column; align-items: center;
-    gap: 4px; cursor: pointer; padding: 8px 4px 0;
-    transition: all 0.2s; position: relative;
-  }
-  .nav-item svg { width: 22px; height: 22px; }
-  .nav-label { font-size: 10px; font-weight: 600; color: var(--text3); }
-  .nav-item.active svg { color: var(--blue); }
-  .nav-item.active .nav-label { color: var(--blue); }
-  .nav-item.active::after {
-    content: ''; position: absolute;
-    top: 0; width: 28px; height: 3px;
-    background: var(--blue); border-radius: 0 0 3px 3px;
-  }
-  .nav-center { flex: 1; display: flex; justify-content: center; align-items: flex-start; padding-top: 0; }
-  .fab {
-    width: 56px; height: 56px;
-    background: var(--orange); border-radius: 18px;
-    display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 4px 16px rgba(249,115,22,0.4);
-    cursor: pointer; transition: all 0.2s;
-    margin-top: -20px;
-    border: 3px solid white;
-  }
-  .fab:active { transform: scale(0.93); }
 
-  /* PAGE HEADER */
-  .page-header {
-    background: var(--blue); padding: 52px 16px 16px;
-    display: flex; align-items: center; gap: 12px;
+  .nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    cursor: pointer;
+    padding: 4px 0;
+    transition: all 0.2s;
+    position: relative;
   }
-  .page-back {
-    width: 36px; height: 36px; border-radius: 12px;
-    background: rgba(255,255,255,0.15);
-    border: none; display: flex; align-items: center; justify-content: center;
+
+  .nav-item.active .nav-icon { color: #1A73E8; }
+  .nav-item.active .nav-label { color: #1A73E8; font-weight: 600; }
+  .nav-icon { font-size: 20px; color: #9CA3AF; transition: all 0.2s; }
+  .nav-label { font-size: 10px; color: #9CA3AF; font-weight: 500; }
+
+  .nav-item.active::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    width: 30px; height: 3px;
+    background: #1A73E8;
+    border-radius: 0 0 4px 4px;
+  }
+
+  /* ── CARDS ── */
+  .card {
+    background: white;
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    border: 1px solid rgba(0,0,0,0.04);
+    transition: all 0.2s;
+  }
+
+  .card:active { transform: scale(0.98); }
+
+  /* ── BUTTONS ── */
+  .btn-primary {
+    background: linear-gradient(135deg, #1A73E8, #1557B0);
+    color: white;
+    border: none;
+    border-radius: 14px;
+    padding: 14px 24px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.2s;
+    box-shadow: 0 4px 15px rgba(26,115,232,0.35);
+    letter-spacing: 0.3px;
+  }
+
+  .btn-primary:active { transform: scale(0.97); box-shadow: none; }
+
+  .btn-accent {
+    background: linear-gradient(135deg, #FF8A00, #E67A00);
+    color: white;
+    border: none;
+    border-radius: 14px;
+    padding: 14px 24px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 15px rgba(255,138,0,0.35);
+  }
+
+  .btn-outline {
+    background: transparent;
+    color: #1A73E8;
+    border: 2px solid #1A73E8;
+    border-radius: 14px;
+    padding: 12px 24px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-sm {
+    padding: 8px 16px !important;
+    font-size: 12px !important;
+    border-radius: 10px !important;
+  }
+
+  /* ── BADGE ── */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .badge-blue { background: #E8F0FE; color: #1A73E8; }
+  .badge-green { background: #E8F5E9; color: #00C853; }
+  .badge-orange { background: #FFF3E0; color: #FF8A00; }
+  .badge-red { background: #FFEBEE; color: #F44336; }
+  .badge-grey { background: #F3F4F6; color: #6B7280; }
+
+  /* ── INPUT ── */
+  .input-field {
+    width: 100%;
+    padding: 13px 16px;
+    border: 1.5px solid #E5E7EB;
+    border-radius: 12px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px;
+    color: #1C1C2E;
+    outline: none;
+    transition: all 0.2s;
+    background: #FAFAFA;
+  }
+
+  .input-field:focus {
+    border-color: #1A73E8;
+    background: white;
+    box-shadow: 0 0 0 4px rgba(26,115,232,0.08);
+  }
+
+  /* ── SECTION ── */
+  .section { padding: 16px 16px 0; }
+  .section-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1C1C2E;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .see-all {
+    font-size: 12px;
+    color: #1A73E8;
+    font-weight: 500;
     cursor: pointer;
   }
-  .page-title { font-family: 'Nunito', sans-serif; font-size: 20px; font-weight: 800; color: white; }
 
-  /* ANIMATIONS */
-  .fade-in { animation: fadeIn 0.3s ease; }
+  /* ── RATING STARS ── */
+  .stars { color: #FFC107; font-size: 13px; letter-spacing: 1px; }
+
+  /* ── SCROLL ROW ── */
+  .scroll-row {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+  }
+  .scroll-row::-webkit-scrollbar { display: none; }
+
+  /* ── ANIMATIONS ── */
   @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
 
-  /* SPLASH AUTO */
-  #splash { cursor: pointer; }
-</style>
-</head>
-<body>
+  .animate-in { animation: fadeIn 0.4s ease forwards; }
+  .animate-up { animation: slideUp 0.35s ease forwards; }
 
-<div class="phone">
+  /* ── SHIMMER LOADING ── */
+  .shimmer {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 8px;
+  }
 
-  <!-- SPLASH -->
-  <div class="screen active" id="splash" onclick="goTo('login')">
-    <div class="splash-content">
-      <div class="splash-logo">
-        <svg viewBox="0 0 56 56" fill="none">
-          <path d="M28 8L8 18V38L28 48L48 38V18L28 8Z" fill="rgba(255,255,255,0.3)" stroke="white" stroke-width="2"/>
-          <path d="M20 28L24 32L36 22" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-          <circle cx="28" cy="28" r="8" fill="rgba(255,255,255,0.2)" stroke="white" stroke-width="1.5"/>
-        </svg>
-      </div>
-      <div class="splash-title">FixMate</div>
-      <div class="splash-sub">Your Trusted Repair Partner</div>
-      <div class="splash-dots">
-        <span></span><span></span><span></span>
-      </div>
-    </div>
+  /* ── TABS ── */
+  .tab-bar {
+    display: flex;
+    background: #F3F4F6;
+    border-radius: 12px;
+    padding: 4px;
+    margin: 0 16px 16px;
+  }
+
+  .tab-item {
+    flex: 1;
+    padding: 9px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 9px;
+    cursor: pointer;
+    transition: all 0.25s;
+    color: #6B7280;
+  }
+
+  .tab-item.active {
+    background: white;
+    color: #1A73E8;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+
+  /* ── PROGRESS BAR ── */
+  .progress-bar {
+    height: 6px;
+    background: #E5E7EB;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #1A73E8, #FF8A00);
+    border-radius: 10px;
+    transition: width 0.5s ease;
+  }
+
+  /* ── STEPPER ── */
+  .stepper {
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+    position: relative;
+  }
+
+  .step-dot {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+    z-index: 1;
+  }
+
+  .step-done { background: #00C853; color: white; }
+  .step-active { background: #1A73E8; color: white; box-shadow: 0 0 0 4px rgba(26,115,232,0.2); }
+  .step-pending { background: #E5E7EB; color: #9CA3AF; }
+
+  .step-line {
+    flex: 1;
+    height: 2px;
+    background: #E5E7EB;
+  }
+
+  .step-line.done { background: #00C853; }
+
+  /* ── MAP PLACEHOLDER ── */
+  .map-bg {
+    background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 50%, #E8EAF6 100%);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .map-grid {
+    position: absolute;
+    inset: 0;
+    opacity: 0.15;
+    background-image: 
+      linear-gradient(rgba(26,115,232,0.5) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(26,115,232,0.5) 1px, transparent 1px);
+    background-size: 30px 30px;
+  }
+
+  /* ── AVATAR ── */
+  .avatar {
+    border-radius: 50%;
+    object-fit: cover;
+    background: linear-gradient(135deg, #1A73E8, #1557B0);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  /* ── CHAT BUBBLE ── */
+  .bubble-sent {
+    background: linear-gradient(135deg, #1A73E8, #1557B0);
+    color: white;
+    border-radius: 18px 18px 4px 18px;
+    padding: 10px 14px;
+    max-width: 75%;
+    align-self: flex-end;
+    font-size: 13px;
+    box-shadow: 0 2px 8px rgba(26,115,232,0.25);
+  }
+
+  .bubble-recv {
+    background: #F3F4F6;
+    color: #1C1C2E;
+    border-radius: 18px 18px 18px 4px;
+    padding: 10px 14px;
+    max-width: 75%;
+    align-self: flex-start;
+    font-size: 13px;
+  }
+
+  /* ── MODE SWITCHER ── */
+  .mode-switch {
+    display: flex;
+    align-items: center;
+    background: rgba(255,255,255,0.12);
+    border-radius: 20px;
+    padding: 3px;
+    backdrop-filter: blur(10px);
+  }
+
+  .mode-btn {
+    padding: 5px 14px;
+    border-radius: 16px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    background: transparent;
+    color: rgba(255,255,255,0.7);
+  }
+
+  .mode-btn.active {
+    background: white;
+    color: #1A73E8;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+
+  /* ── NOTIFICATION DOT ── */
+  .notif-dot {
+    position: absolute;
+    top: -4px; right: -4px;
+    width: 16px; height: 16px;
+    background: #F44336;
+    border-radius: 50%;
+    font-size: 9px;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    border: 2px solid white;
+  }
+
+  /* ── ADMIN LAYOUT ── */
+  .admin-sidebar {
+    width: 220px;
+    background: linear-gradient(180deg, #1C1C2E 0%, #0D1421 100%);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+  }
+
+  .admin-main {
+    flex: 1;
+    overflow-y: auto;
+    background: #F8FAFF;
+  }
+
+  .admin-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 16px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 10px;
+    margin: 2px 8px;
+    transition: all 0.2s;
+    color: rgba(255,255,255,0.6);
+  }
+
+  .admin-nav-item.active,
+  .admin-nav-item:hover {
+    background: rgba(26,115,232,0.25);
+    color: white;
+  }
+
+  .admin-nav-item.active {
+    background: linear-gradient(135deg, rgba(26,115,232,0.4), rgba(26,115,232,0.2));
+    color: #60A5FA;
+  }
+
+  .stat-card {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    border: 1px solid rgba(0,0,0,0.04);
+  }
+
+  /* ── LABEL TAG SYSTEM ── */
+  .frame-label {
+    text-align: center;
+    color: rgba(255,255,255,0.7);
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  /* ── OTP INPUT ── */
+  .otp-container { display: flex; gap: 8px; justify-content: center; }
+  .otp-box {
+    width: 50px; height: 56px;
+    border: 2px solid #E5E7EB;
+    border-radius: 12px;
+    font-size: 22px;
+    font-weight: 700;
+    text-align: center;
+    outline: none;
+    font-family: 'Poppins', sans-serif;
+    transition: all 0.2s;
+    color: #1A73E8;
+    background: #FAFAFA;
+  }
+  .otp-box.filled {
+    border-color: #1A73E8;
+    background: #E8F0FE;
+    box-shadow: 0 0 0 3px rgba(26,115,232,0.1);
+  }
+
+  /* ── CHIP ── */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1.5px solid #E5E7EB;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    color: #6B7280;
+    background: white;
+  }
+
+  .chip.active {
+    border-color: #1A73E8;
+    background: #E8F0FE;
+    color: #1A73E8;
+    font-weight: 600;
+  }
+
+  /* ── TOGGLE ── */
+  .toggle-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .toggle {
+    width: 44px; height: 24px;
+    background: #E5E7EB;
+    border-radius: 12px;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  .toggle.on { background: #1A73E8; }
+
+  .toggle::after {
+    content: '';
+    position: absolute;
+    width: 18px; height: 18px;
+    background: white;
+    border-radius: 50%;
+    top: 3px; left: 3px;
+    transition: all 0.3s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }
+
+  .toggle.on::after { left: 23px; }
+
+  /* ── EARNINGS CHART ── */
+  .bar-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    height: 80px;
+    padding-bottom: 4px;
+  }
+
+  .bar-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .bar-fill {
+    width: 100%;
+    background: linear-gradient(180deg, #1A73E8, #1557B0);
+    border-radius: 6px 6px 0 0;
+    transition: height 0.5s ease;
+    min-height: 6px;
+  }
+
+  .bar-fill.accent {
+    background: linear-gradient(180deg, #FF8A00, #E67A00);
+  }
+
+  .bar-label { font-size: 9px; color: #9CA3AF; font-weight: 500; }
+
+  /* ── PROMO BANNER ── */
+  .promo-banner {
+    background: linear-gradient(135deg, #FF8A00 0%, #E65100 100%);
+    border-radius: 16px;
+    padding: 16px;
+    color: white;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .promo-banner::after {
+    content: '🔧';
+    position: absolute;
+    right: 16px; top: 50%;
+    transform: translateY(-50%);
+    font-size: 40px;
+    opacity: 0.3;
+  }
+
+  /* ── LOADING DOTS ── */
+  .loading-dots { display: flex; gap: 5px; align-items: center; }
+  .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #1A73E8;
+    animation: pulse 1.2s infinite;
+  }
+  .dot:nth-child(2) { animation-delay: 0.2s; }
+  .dot:nth-child(3) { animation-delay: 0.4s; }
+
+  /* ── SCREEN TRANSITIONS ── */
+  .screen-enter { animation: fadeIn 0.3s ease; }
+
+  /* ── DIVIDER ── */
+  .divider {
+    height: 8px;
+    background: #F3F4F6;
+    margin: 0 -16px;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    .admin-frame { width: 100%; height: auto; min-height: 500px; }
+    .fixmate-root { padding: 12px; }
+    .phone-frame { height: 700px; }
+  }
+`;
+
+// ============================================================
+// ICONS (SVG-based emoji-free system)
+// ============================================================
+const Icon = ({ name, size = 20, color = "currentColor" }) => {
+  const icons = {
+    home: "🏠", search: "🔍", bell: "🔔", user: "👤", wrench: "🔧",
+    star: "⭐", map: "📍", chat: "💬", wallet: "💰", settings: "⚙️",
+    ac: "❄️", tv: "📺", fridge: "🧊", washing: "👕", fan: "💨",
+    laptop: "💻", electric: "⚡", plumber: "🚰", cctv: "📷", ro: "💧",
+    check: "✅", close: "❌", phone: "📞", back: "←", add: "➕",
+    camera: "📸", location: "📍", time: "🕐", money: "💵", send: "📤",
+    emergency: "🚨", filter: "⚙️", verified: "✔️", menu: "☰",
+    jobs: "📋", earnings: "📊", rating: "🏆", profile: "👤",
+    approve: "✅", reject: "❌", suspend: "⛔", analytics: "📈",
+    users: "👥", techs: "🛠️", payments: "💳", cats: "📦",
+  };
+  return <span style={{ fontSize: size }}>{icons[name] || "•"}</span>;
+};
+
+// ============================================================
+// DATA
+// ============================================================
+const SERVICE_CATEGORIES = [
+  { id: 1, name: "AC Repair", icon: "ac", color: "#E3F2FD", iconBg: "#1A73E8" },
+  { id: 2, name: "TV Repair", icon: "tv", color: "#F3E5F5", iconBg: "#9C27B0" },
+  { id: 3, name: "Refrigerator", icon: "fridge", color: "#E8F5E9", iconBg: "#00C853" },
+  { id: 4, name: "Washing Machine", icon: "washing", color: "#FFF3E0", iconBg: "#FF8A00" },
+  { id: 5, name: "Fan Repair", icon: "fan", color: "#E0F7FA", iconBg: "#00BCD4" },
+  { id: 6, name: "Laptop Repair", icon: "laptop", color: "#FBE9E7", iconBg: "#F44336" },
+  { id: 7, name: "Electrician", icon: "electric", color: "#FFFDE7", iconBg: "#FFC107" },
+  { id: 8, name: "Plumber", icon: "plumber", color: "#E8EAF6", iconBg: "#3F51B5" },
+  { id: 9, name: "RO Purifier", icon: "ro", color: "#E0F2F1", iconBg: "#009688" },
+  { id: 10, name: "CCTV", icon: "cctv", color: "#FCE4EC", iconBg: "#E91E63" },
+  { id: 11, name: "Computer", icon: "laptop", color: "#EDE7F6", iconBg: "#673AB7" },
+  { id: 12, name: "Cooler", icon: "fan", color: "#E3F2FD", iconBg: "#2196F3" },
+];
+
+const TECHNICIANS = [
+  { id: 1, name: "Rajesh Kumar", service: "AC & Cooling", rating: 4.9, reviews: 234, price: "₹299", distance: "0.8 km", exp: "8 yrs", available: true, jobs: 540, avatar: "RK", verified: true },
+  { id: 2, name: "Sunil Sharma", service: "Electronics", rating: 4.8, reviews: 189, price: "₹349", distance: "1.2 km", exp: "6 yrs", available: true, jobs: 420, avatar: "SS", verified: true },
+  { id: 3, name: "Amir Khan", service: "Plumbing", rating: 4.7, reviews: 156, price: "₹199", distance: "2.1 km", exp: "10 yrs", available: false, jobs: 380, avatar: "AK", verified: true },
+  { id: 4, name: "Pradeep Singh", service: "Electrician", rating: 4.6, reviews: 98, price: "₹249", distance: "3.0 km", exp: "5 yrs", available: true, jobs: 210, avatar: "PS", verified: false },
+];
+
+const ACTIVE_JOBS = [
+  { id: "JB001", service: "AC Repair", tech: "Rajesh Kumar", status: "On The Way", time: "Arriving in 12 min", price: "₹599", step: 2 },
+  { id: "JB002", service: "TV Repair", tech: "Sunil Sharma", status: "Repair Started", time: "In Progress", price: "₹449", step: 3 },
+];
+
+const PAST_JOBS = [
+  { id: "JB003", service: "Refrigerator Repair", tech: "Amir Khan", status: "Completed", date: "Jan 12, 2025", price: "₹1,299", rating: 5 },
+  { id: "JB004", service: "Washing Machine", tech: "Pradeep Singh", status: "Completed", date: "Dec 28, 2024", price: "₹799", rating: 4 },
+  { id: "JB005", service: "Laptop Repair", tech: "Sunil Sharma", status: "Cancelled", date: "Dec 20, 2024", price: "₹499", rating: null },
+];
+
+const CHAT_MESSAGES = [
+  { id: 1, text: "Hello! I'm on my way to your location.", sent: false, time: "10:30 AM" },
+  { id: 2, text: "Ok, please bring your tools for AC gas refill", sent: true, time: "10:31 AM" },
+  { id: 3, text: "Sure, I have all equipment. ETA 10 minutes.", sent: false, time: "10:31 AM" },
+  { id: 4, text: "Can you check the remote also?", sent: true, time: "10:33 AM" },
+  { id: 5, text: "Yes absolutely! I'll check everything.", sent: false, time: "10:33 AM" },
+];
+
+const TECH_INCOMING_JOBS = [
+  { id: "JB006", service: "AC Service", user: "Priya Mehta", address: "B-42, Sector 18, Noida", distance: "1.4 km", price: "₹499", time: "2:00 PM - 4:00 PM", desc: "AC not cooling properly, gas may need refill", urgent: true },
+  { id: "JB007", service: "TV Repair", user: "Rohit Gupta", address: "301, Anand Vihar, Delhi", distance: "2.8 km", price: "₹349", time: "4:00 PM - 6:00 PM", desc: "TV screen has vertical lines, might be panel issue", urgent: false },
+];
+
+const ADMIN_STATS = [
+  { label: "Total Users", value: "24,891", icon: "users", trend: "+12%", color: "#1A73E8", bg: "#E8F0FE" },
+  { label: "Technicians", value: "1,247", icon: "techs", trend: "+8%", color: "#00C853", bg: "#E8F5E9" },
+  { label: "Daily Bookings", value: "428", icon: "jobs", trend: "+23%", color: "#FF8A00", bg: "#FFF3E0" },
+  { label: "Revenue Today", value: "₹1.2L", icon: "earnings", trend: "+18%", color: "#9C27B0", bg: "#F3E5F5" },
+];
+
+const PENDING_TECHS = [
+  { id: "T101", name: "Vikram Yadav", phone: "+91 98765 43210", service: "Electrician", city: "Delhi", exp: "4 yrs", submitted: "2 hrs ago" },
+  { id: "T102", name: "Ramesh Patel", phone: "+91 87654 32109", service: "Plumbing", city: "Mumbai", exp: "7 yrs", submitted: "5 hrs ago" },
+  { id: "T103", name: "Deepak Joshi", phone: "+91 76543 21098", service: "AC Repair", city: "Bangalore", exp: "3 yrs", submitted: "1 day ago" },
+];
+
+const ALL_JOBS_ADMIN = [
+  { id: "JB001", user: "Priya Mehta", tech: "Rajesh Kumar", service: "AC Repair", status: "Active", amount: "₹599", date: "Today 2:00 PM" },
+  { id: "JB002", user: "Rohit Gupta", tech: "Sunil Sharma", service: "TV Repair", status: "Active", amount: "₹449", date: "Today 4:00 PM" },
+  { id: "JB003", user: "Anita Singh", tech: "Amir Khan", service: "Plumbing", status: "Completed", amount: "₹299", date: "Yesterday" },
+  { id: "JB004", user: "Mohit Kumar", tech: "Pradeep Singh", service: "Electrician", status: "Completed", amount: "₹349", date: "Yesterday" },
+  { id: "JB005", user: "Sunita Devi", tech: "—", service: "Laptop Repair", status: "Cancelled", amount: "₹499", date: "2 days ago" },
+];
+
+// ============================================================
+// REUSABLE COMPONENTS
+// ============================================================
+
+const AvatarCircle = ({ initials, size = 40, color = "#1A73E8" }) => (
+  <div className="avatar" style={{ width: size, height: size, fontSize: size * 0.35, background: `linear-gradient(135deg, ${color}, ${color}CC)` }}>
+    {initials}
   </div>
+);
 
-  <!-- LOGIN -->
-  <div class="screen" id="login">
-    <div class="login-hero">
-      <h1>Welcome to FixMate 👋</h1>
-      <p>Book trusted repair experts near you</p>
-    </div>
-    <div class="login-body">
-      <div class="input-group">
-        <label>Phone Number</label>
-        <div class="input-wrap">
-          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
-          <input type="tel" placeholder="+91 98765 43210">
+const StarRating = ({ rating, count }) => (
+  <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+    <span className="stars">{"★".repeat(Math.floor(rating))}{"☆".repeat(5 - Math.floor(rating))}</span>
+    <span style={{ fontSize: 12, color: "#6B7280" }}>{rating} ({count})</span>
+  </div>
+);
+
+const TechnicianCard = ({ tech, compact = false, onBook }) => (
+  <div className="card" style={{ marginBottom: 10, cursor: "pointer" }} onClick={onBook}>
+    <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+      <div style={{ position: "relative" }}>
+        <AvatarCircle initials={tech.avatar} size={52} color="#1A73E8" />
+        {tech.available && (
+          <div style={{ position: "absolute", bottom: 0, right: 0, width: 14, height: 14, background: "#00C853", borderRadius: "50%", border: "2px solid white" }} />
+        )}
+      </div>
+      <div style={{ flex: 1 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
+          <span style={{ fontWeight: 700, fontSize: 14, color: "#1C1C2E" }}>{tech.name}</span>
+          {tech.verified && <span style={{ fontSize: 12, color: "#1A73E8" }}>✔️</span>}
+        </div>
+        <div style={{ fontSize: 12, color: "#6B7280", marginBottom: 6 }}>{tech.service} • {tech.exp} exp</div>
+        <StarRating rating={tech.rating} count={tech.reviews} />
+      </div>
+      <div style={{ textAlign: "right" }}>
+        <div style={{ fontWeight: 700, color: "#1A73E8", fontSize: 15 }}>{tech.price}</div>
+        <div style={{ fontSize: 11, color: "#6B7280" }}>{tech.distance}</div>
+        <div style={{ fontSize: 11, color: tech.available ? "#00C853" : "#F44336", fontWeight: 600, marginTop: 4 }}>
+          {tech.available ? "Available" : "Busy"}
         </div>
       </div>
-      <div class="input-group">
-        <label>OTP Verification</label>
-        <div class="input-wrap">
-          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-          <input type="text" placeholder="Enter 6-digit OTP">
-        </div>
-      </div>
-      <button class="btn-orange" onclick="goTo('home')">Continue with Phone →</button>
-      <div class="divider"><span>or</span></div>
-      <button class="btn-google" onclick="goTo('home')">
-        <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20H24v8h11.3C33.7 33 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.7 1.1 7.8 2.9l5.7-5.7C34 6.4 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 20-8 20-20 0-1.3-.1-2.7-.4-4z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.5 16 19 13 24 13c3 0 5.7 1.1 7.8 2.9l5.7-5.7C34 6.4 29.3 4 24 4 16.3 4 9.7 8.4 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-1.9 13.4-5.1l-6.2-5.2C29.5 35.5 26.9 36 24 36c-5.2 0-9.7-3-11.3-7.5l-6.6 5.1C9.5 40 16.3 44 24 44z"/><path fill="#1976D2" d="M43.6 20H24v8h11.3c-.8 2.2-2.3 4-4.3 5.3l6.2 5.2C40.9 35.5 44 30.2 44 24c0-1.3-.1-2.7-.4-4z"/></svg>
-        Sign in with Google
-      </button>
-      <div class="login-footer">New to FixMate? <a onclick="goTo('home')">Create Account</a></div>
     </div>
+    {!compact && (
+      <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+        <button className="btn-outline btn-sm" style={{ flex: 1 }}>View Profile</button>
+        <button className="btn-primary btn-sm" style={{ flex: 1 }} onClick={e => { e.stopPropagation(); onBook && onBook(); }}>Book Now</button>
+      </div>
+    )}
   </div>
+);
 
-  <!-- HOME -->
-  <div class="screen" id="home">
-    <div class="topbar">
-      <div class="topbar-row1">
-        <div class="location">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
-          <div>
-            <div class="location-text">Thane, Maharashtra</div>
-            <div class="location-sub">▼ Change location</div>
+const JobStatusStepper = ({ step }) => {
+  const steps = ["Requested", "Accepted", "On Way", "Started", "Done"];
+  return (
+    <div className="stepper" style={{ gap: 0 }}>
+      {steps.map((s, i) => (
+        <div key={i} style={{ display: "flex", alignItems: "center", flex: i < steps.length - 1 ? 1 : 0 }}>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+            <div className={`step-dot ${i < step ? "step-done" : i === step ? "step-active" : "step-pending"}`}>
+              {i < step ? "✓" : i + 1}
+            </div>
+            <span style={{ fontSize: 9, color: i <= step ? "#1A73E8" : "#9CA3AF", fontWeight: 600, whiteSpace: "nowrap" }}>{s}</span>
+          </div>
+          {i < steps.length - 1 && <div className={`step-line ${i < step ? "done" : ""}`} style={{ margin: "0 2px", marginBottom: 18 }} />}
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const BottomNav = ({ items, active, onChange }) => (
+  <div className="bottom-nav">
+    {items.map(item => (
+      <div key={item.id} className={`nav-item ${active === item.id ? "active" : ""}`} onClick={() => onChange(item.id)}>
+        <span className="nav-icon">{item.icon}</span>
+        <span className="nav-label">{item.label}</span>
+      </div>
+    ))}
+  </div>
+);
+
+// ============================================================
+// CUSTOMER APP SCREENS
+// ============================================================
+
+// SCREEN 1: Splash
+const SplashScreen = ({ onNext }) => {
+  useEffect(() => { const t = setTimeout(onNext, 1800); return () => clearTimeout(t); }, []);
+  return (
+    <div style={{ height: "100%", background: "linear-gradient(160deg, #1A73E8 0%, #0D47A1 100%)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "white" }}>
+      <div style={{ marginBottom: 20, animation: "pulse 1.5s infinite" }}>
+        <div style={{ width: 90, height: 90, background: "rgba(255,255,255,0.15)", borderRadius: 28, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 44, backdropFilter: "blur(10px)", border: "2px solid rgba(255,255,255,0.3)" }}>🔧</div>
+      </div>
+      <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 36, fontWeight: 800, letterSpacing: -1, marginBottom: 6 }}>FixMate</h1>
+      <p style={{ opacity: 0.75, fontSize: 14, letterSpacing: 1, textTransform: "uppercase" }}>Repair at Your Doorstep</p>
+      <div className="loading-dots" style={{ marginTop: 40 }}>
+        <div className="dot" style={{ background: "rgba(255,255,255,0.7)" }} />
+        <div className="dot" style={{ background: "rgba(255,255,255,0.7)" }} />
+        <div className="dot" style={{ background: "rgba(255,255,255,0.7)" }} />
+      </div>
+    </div>
+  );
+};
+
+// SCREEN 2: Login — Role Selection + OTP
+const LoginScreen = ({ onLogin }) => {
+  const [role, setRole] = useState(null);       // null | "customer" | "technician"
+  const [step, setStep] = useState("role");     // "role" | "phone" | "otp"
+  const [phone, setPhone] = useState("");
+  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+
+  const handleOtp = (val, idx) => {
+    const arr = [...otp];
+    arr[idx] = val;
+    setOtp(arr);
+    if (val && idx < 5) document.getElementById(`otp-login-${idx + 1}`)?.focus();
+    if (arr.every(v => v !== "") && idx === 5) setTimeout(() => onLogin(role), 600);
+  };
+
+  // ── STEP 1: Role Selection ──
+  if (step === "role") return (
+    <div style={{ height: "100%", background: "linear-gradient(160deg,#0D47A1 0%,#1A73E8 60%,#1565C0 100%)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 24px", color: "white" }}>
+      {/* Logo */}
+      <div style={{ marginBottom: 10, animation: "pulse 2s infinite" }}>
+        <div style={{ width: 84, height: 84, background: "rgba(255,255,255,0.15)", borderRadius: 26, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 42, backdropFilter: "blur(10px)", border: "2px solid rgba(255,255,255,0.25)" }}>🔧</div>
+      </div>
+      <h1 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: 34, fontWeight: 900, letterSpacing: -1, marginBottom: 4 }}>FixMate</h1>
+      <p style={{ opacity: 0.75, fontSize: 13, marginBottom: 40, letterSpacing: 0.5 }}>Repair at Your Doorstep</p>
+
+      <div style={{ width: "100%", marginBottom: 32 }}>
+        <p style={{ textAlign: "center", fontSize: 14, opacity: 0.85, fontWeight: 600, marginBottom: 20, letterSpacing: 0.5, textTransform: "uppercase" }}>Join as</p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+
+          {/* Customer Card */}
+          <div onClick={() => { setRole("customer"); setStep("phone"); }}
+            style={{ background: role === "customer" ? "white" : "rgba(255,255,255,0.12)", borderRadius: 20, padding: "18px 20px", cursor: "pointer", border: `2px solid ${role === "customer" ? "white" : "rgba(255,255,255,0.2)"}`, display: "flex", alignItems: "center", gap: 16, transition: "all 0.25s", backdropFilter: "blur(10px)" }}>
+            <div style={{ width: 54, height: 54, background: "linear-gradient(135deg,#FF8A00,#E65100)", borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, flexShrink: 0 }}>👤</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 800, fontSize: 17, color: role === "customer" ? "#1A73E8" : "white", marginBottom: 3 }}>Customer</div>
+              <div style={{ fontSize: 12, color: role === "customer" ? "#6B7280" : "rgba(255,255,255,0.7)", lineHeight: 1.4 }}>Book repairs for your home appliances & electronics</div>
+            </div>
+            <div style={{ width: 24, height: 24, borderRadius: "50%", border: `2px solid ${role === "customer" ? "#1A73E8" : "rgba(255,255,255,0.5)"}`, background: role === "customer" ? "#1A73E8" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              {role === "customer" && <div style={{ width: 8, height: 8, borderRadius: "50%", background: "white" }} />}
+            </div>
+          </div>
+
+          {/* Technician Card */}
+          <div onClick={() => { setRole("technician"); setStep("phone"); }}
+            style={{ background: role === "technician" ? "white" : "rgba(255,255,255,0.12)", borderRadius: 20, padding: "18px 20px", cursor: "pointer", border: `2px solid ${role === "technician" ? "white" : "rgba(255,255,255,0.2)"}`, display: "flex", alignItems: "center", gap: 16, transition: "all 0.25s", backdropFilter: "blur(10px)" }}>
+            <div style={{ width: 54, height: 54, background: "linear-gradient(135deg,#00C853,#00796B)", borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, flexShrink: 0 }}>🛠️</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 800, fontSize: 17, color: role === "technician" ? "#1A73E8" : "white", marginBottom: 3 }}>Technician</div>
+              <div style={{ fontSize: 12, color: role === "technician" ? "#6B7280" : "rgba(255,255,255,0.7)", lineHeight: 1.4 }}>Accept jobs, earn money & grow your repair business</div>
+            </div>
+            <div style={{ width: 24, height: 24, borderRadius: "50%", border: `2px solid ${role === "technician" ? "#1A73E8" : "rgba(255,255,255,0.5)"}`, background: role === "technician" ? "#1A73E8" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              {role === "technician" && <div style={{ width: 8, height: 8, borderRadius: "50%", background: "white" }} />}
+            </div>
           </div>
         </div>
-        <button class="notif-btn" onclick="goTo('bookings')">
-          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-          <div class="notif-dot"></div>
+      </div>
+
+      <p style={{ fontSize: 11, opacity: 0.55, textAlign: "center" }}>By continuing, you agree to our Terms & Privacy Policy</p>
+    </div>
+  );
+
+  // ── STEP 2: Phone Entry ──
+  if (step === "phone") return (
+    <div style={{ height: "100%", background: "white", display: "flex", flexDirection: "column" }}>
+      {/* Top colored header */}
+      <div style={{ background: role === "customer" ? "linear-gradient(135deg,#1A73E8,#1557B0)" : "linear-gradient(135deg,#00C853,#00796B)", padding: "40px 24px 32px", color: "white", textAlign: "center" }}>
+        <div style={{ fontSize: 44, marginBottom: 10 }}>{role === "customer" ? "👤" : "🛠️"}</div>
+        <h2 style={{ fontWeight: 800, fontSize: 22, fontFamily: "'Space Grotesk',sans-serif", marginBottom: 4 }}>
+          {role === "customer" ? "Welcome!" : "Join as Technician"}
+        </h2>
+        <p style={{ opacity: 0.85, fontSize: 13 }}>
+          {role === "customer" ? "Book expert repairs easily" : "Start earning with your skills"}
+        </p>
+      </div>
+
+      <div style={{ flex: 1, padding: "28px 24px" }}>
+        <div className="animate-in">
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
+            <button onClick={() => setStep("role")} style={{ background: "#F3F4F6", border: "none", borderRadius: 10, width: 36, height: 36, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>←</button>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 17 }}>Enter your phone</div>
+              <div style={{ fontSize: 12, color: "#6B7280" }}>We'll send you a 6-digit OTP</div>
+            </div>
+          </div>
+
+          <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+            <div style={{ padding: "13px 14px", background: "#F3F4F6", borderRadius: 12, fontWeight: 700, fontSize: 14, color: "#1C1C2E", whiteSpace: "nowrap" }}>🇮🇳 +91</div>
+            <input className="input-field" placeholder="98765 43210" value={phone} onChange={e => setPhone(e.target.value)} style={{ flex: 1 }} />
+          </div>
+
+          <button className="btn-primary" onClick={() => setStep("otp")}
+            style={{ marginBottom: 16, background: role === "customer" ? "linear-gradient(135deg,#1A73E8,#1557B0)" : "linear-gradient(135deg,#00C853,#00796B)" }}>
+            Get OTP
+          </button>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+            <div style={{ flex: 1, height: 1, background: "#E5E7EB" }} />
+            <span style={{ fontSize: 12, color: "#9CA3AF" }}>or</span>
+            <div style={{ flex: 1, height: 1, background: "#E5E7EB" }} />
+          </div>
+
+          <button onClick={() => onLogin(role)} style={{ width: "100%", padding: "13px", border: "1.5px solid #E5E7EB", borderRadius: 14, background: "white", cursor: "pointer", fontFamily: "'Poppins',sans-serif", fontSize: 14, fontWeight: 600, color: "#1C1C2E", display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
+            <span style={{ fontSize: 18 }}>🌐</span> Continue with Google
+          </button>
+
+          {/* Role badge */}
+          <div style={{ textAlign: "center", marginTop: 20 }}>
+            <span className={`badge ${role === "customer" ? "badge-blue" : "badge-green"}`} style={{ fontSize: 12, padding: "5px 14px" }}>
+              {role === "customer" ? "👤 Customer Account" : "🛠️ Technician Account"}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // ── STEP 3: OTP Verification ──
+  return (
+    <div style={{ height: "100%", background: "white", display: "flex", flexDirection: "column" }}>
+      <div style={{ background: role === "customer" ? "linear-gradient(135deg,#1A73E8,#1557B0)" : "linear-gradient(135deg,#00C853,#00796B)", padding: "40px 24px 32px", color: "white", textAlign: "center" }}>
+        <div style={{ fontSize: 44, marginBottom: 8 }}>🔐</div>
+        <h2 style={{ fontWeight: 800, fontSize: 22, fontFamily: "'Space Grotesk',sans-serif" }}>Verify OTP</h2>
+        <p style={{ opacity: 0.85, fontSize: 13, marginTop: 4 }}>Sent to +91 {phone}</p>
+      </div>
+
+      <div style={{ flex: 1, padding: "32px 24px" }} className="animate-in">
+        <button onClick={() => setStep("phone")} style={{ background: "#F3F4F6", border: "none", borderRadius: 10, width: 36, height: 36, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 24 }}>←</button>
+
+        <div style={{ fontWeight: 700, fontSize: 17, marginBottom: 6 }}>Enter 6-digit code</div>
+        <div style={{ fontSize: 13, color: "#6B7280", marginBottom: 28 }}>Check your SMS messages</div>
+
+        <div className="otp-container" style={{ marginBottom: 28 }}>
+          {otp.map((v, i) => (
+            <input key={i} id={`otp-login-${i}`}
+              className={`otp-box ${v ? "filled" : ""}`}
+              style={{ borderColor: v ? (role === "customer" ? "#1A73E8" : "#00C853") : "#E5E7EB", color: role === "customer" ? "#1A73E8" : "#00C853" }}
+              maxLength={1} value={v} onChange={e => handleOtp(e.target.value, i)} />
+          ))}
+        </div>
+
+        <button className="btn-primary"
+          onClick={() => onLogin(role)}
+          style={{ background: role === "customer" ? "linear-gradient(135deg,#1A73E8,#1557B0)" : "linear-gradient(135deg,#00C853,#00796B)" }}>
+          Verify & Continue →
+        </button>
+
+        <p style={{ textAlign: "center", marginTop: 16, fontSize: 13, color: "#6B7280" }}>
+          Resend in <span style={{ color: role === "customer" ? "#1A73E8" : "#00C853", fontWeight: 600 }}>30s</span>
+        </p>
+      </div>
+    </div>
+  );
+};
+
+// SCREEN 3: Customer Home
+const CustomerHome = ({ onNavigate }) => {
+  const [filter, setFilter] = useState("All");
+  const filters = ["All", "Nearby", "Top Rated", "Budget"];
+
+  return (
+    <div>
+      {/* Header */}
+      <div className="app-header" style={{ paddingBottom: 24 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+          <div>
+            <div style={{ fontSize: 13, opacity: 0.8, marginBottom: 2 }}>📍 Noida, Sector 62</div>
+            <h2 style={{ fontSize: 22, fontWeight: 800, fontFamily: "'Space Grotesk',sans-serif" }}>Good Morning, Rahul! 👋</h2>
+          </div>
+          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+            <div style={{ position: "relative" }}>
+              <button onClick={() => onNavigate("notifications")} style={{ background: "rgba(255,255,255,0.15)", border: "none", borderRadius: 12, width: 40, height: 40, cursor: "pointer", fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center" }}>🔔</button>
+              <div className="notif-dot">3</div>
+            </div>
+            <AvatarCircle initials="R" size={40} color="#FF8A00" />
+          </div>
+        </div>
+        {/* Search */}
+        <div style={{ background: "white", borderRadius: 14, padding: "12px 16px", display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontSize: 18, opacity: 0.5 }}>🔍</span>
+          <input placeholder="Search for AC repair, Plumber..." style={{ flex: 1, border: "none", outline: "none", fontFamily: "'Poppins',sans-serif", fontSize: 13, color: "#6B7280", background: "transparent" }} />
+          <button className="btn-accent btn-sm" style={{ flexShrink: 0 }}>Search</button>
+        </div>
+      </div>
+
+      {/* Emergency Button */}
+      <div style={{ padding: "14px 16px 0" }}>
+        <div onClick={() => onNavigate("emergency")} style={{ background: "linear-gradient(135deg, #F44336, #C62828)", borderRadius: 14, padding: "12px 16px", color: "white", display: "flex", alignItems: "center", gap: 10, cursor: "pointer", marginBottom: 4 }}>
+          <span style={{ fontSize: 24 }}>🚨</span>
+          <div>
+            <div style={{ fontWeight: 700, fontSize: 14 }}>Emergency Repair</div>
+            <div style={{ fontSize: 11, opacity: 0.85 }}>Get a technician in 30 minutes</div>
+          </div>
+          <span style={{ marginLeft: "auto", fontSize: 18, opacity: 0.8 }}>→</span>
+        </div>
+      </div>
+
+      {/* Promo Banner */}
+      <div className="section">
+        <div className="promo-banner">
+          <div style={{ fontSize: 12, opacity: 0.85, marginBottom: 4, fontWeight: 500 }}>LIMITED TIME OFFER</div>
+          <div style={{ fontWeight: 800, fontSize: 18, marginBottom: 4, fontFamily: "'Space Grotesk',sans-serif" }}>20% Off AC Service</div>
+          <div style={{ fontSize: 12, opacity: 0.85, marginBottom: 12 }}>Use code: COOL20</div>
+          <button className="btn-sm" style={{ background: "white", color: "#FF8A00", border: "none", borderRadius: 10, padding: "7px 16px", fontWeight: 700, fontFamily: "'Poppins',sans-serif", fontSize: 12, cursor: "pointer" }}>Book Now</button>
+        </div>
+      </div>
+
+      {/* Categories */}
+      <div className="section">
+        <div className="section-title">
+          <span>Service Categories</span>
+          <span className="see-all" onClick={() => onNavigate("categories")}>See All</span>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
+          {SERVICE_CATEGORIES.slice(0, 8).map(cat => (
+            <div key={cat.id} onClick={() => onNavigate("techList")} style={{ background: "white", borderRadius: 14, padding: "12px 8px", textAlign: "center", cursor: "pointer", border: "1px solid #E5E7EB", transition: "all 0.2s", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
+              <div style={{ width: 44, height: 44, borderRadius: 14, background: cat.color, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 8px", fontSize: 22 }}>
+                <Icon name={cat.icon} />
+              </div>
+              <div style={{ fontSize: 10, fontWeight: 600, color: "#4B5563", lineHeight: 1.3 }}>{cat.name}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="section" style={{ paddingBottom: 10 }}>
+        <div className="scroll-row">
+          {filters.map(f => (
+            <div key={f} className={`chip ${filter === f ? "active" : ""}`} onClick={() => setFilter(f)}>{f}</div>
+          ))}
+        </div>
+      </div>
+
+      {/* Nearby Technicians */}
+      <div className="section">
+        <div className="section-title">
+          <span>Nearby Technicians</span>
+          <span className="see-all" onClick={() => onNavigate("techList")}>View All</span>
+        </div>
+        {TECHNICIANS.slice(0, 3).map(t => (
+          <TechnicianCard key={t.id} tech={t} onBook={() => onNavigate("booking")} />
+        ))}
+      </div>
+
+      <div style={{ height: 16 }} />
+    </div>
+  );
+};
+
+// SCREEN 4: Service Booking Flow
+const BookingScreen = ({ onBack, onConfirm }) => {
+  const [step, setStep] = useState(1);
+  const [desc, setDesc] = useState("");
+  const [budget, setBudget] = useState("");
+  const [slot, setSlot] = useState(null);
+
+  const slots = ["9 AM - 11 AM", "11 AM - 1 PM", "2 PM - 4 PM", "4 PM - 6 PM", "6 PM - 8 PM"];
+
+  return (
+    <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+      {/* Header */}
+      <div style={{ background: "linear-gradient(135deg, #1A73E8, #1557B0)", padding: "16px 20px", color: "white" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
+          <button onClick={onBack} style={{ background: "rgba(255,255,255,0.15)", border: "none", borderRadius: 10, width: 36, height: 36, cursor: "pointer", color: "white", fontSize: 16 }}>←</button>
+          <h2 style={{ fontWeight: 700, fontSize: 18 }}>Book AC Repair</h2>
+        </div>
+        {/* Progress */}
+        <div style={{ display: "flex", gap: 6 }}>
+          {[1, 2, 3].map(s => (
+            <div key={s} style={{ flex: 1, height: 4, borderRadius: 4, background: s <= step ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.25)", transition: "all 0.3s" }} />
+          ))}
+        </div>
+        <div style={{ fontSize: 11, opacity: 0.8, marginTop: 6 }}>Step {step} of 3</div>
+      </div>
+
+      <div style={{ flex: 1, overflow: "auto", padding: 16 }}>
+        {step === 1 && (
+          <div className="animate-in">
+            <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>Describe the Problem</h3>
+            <p style={{ fontSize: 13, color: "#6B7280", marginBottom: 16 }}>Help the technician understand the issue</p>
+
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>Problem Description *</label>
+              <textarea className="input-field" placeholder="e.g. AC is not cooling, making noise..." rows={4} value={desc} onChange={e => setDesc(e.target.value)} style={{ resize: "none" }} />
+            </div>
+
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>Upload Photos (Optional)</label>
+              <div style={{ border: "2px dashed #E5E7EB", borderRadius: 14, padding: "24px 16px", textAlign: "center", cursor: "pointer", background: "#FAFAFA" }}>
+                <div style={{ fontSize: 32, marginBottom: 8 }}>📸</div>
+                <div style={{ fontSize: 13, color: "#6B7280" }}>Tap to upload problem photos</div>
+                <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 4 }}>Max 5 photos, 5MB each</div>
+              </div>
+            </div>
+
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>Budget (Optional)</label>
+              <div style={{ position: "relative" }}>
+                <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", fontSize: 14, color: "#6B7280" }}>₹</span>
+                <input className="input-field" placeholder="Enter your budget" value={budget} onChange={e => setBudget(e.target.value)} style={{ paddingLeft: 30 }} />
+              </div>
+            </div>
+
+            <button className="btn-primary" onClick={() => setStep(2)}>Next: Choose Time Slot</button>
+          </div>
+        )}
+
+        {step === 2 && (
+          <div className="animate-in">
+            <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>Select Time Slot</h3>
+            <p style={{ fontSize: 13, color: "#6B7280", marginBottom: 16 }}>Choose a convenient time</p>
+
+            {/* Date row */}
+            <div className="scroll-row" style={{ marginBottom: 16 }}>
+              {["Today", "Tomorrow", "Thu 23", "Fri 24", "Sat 25"].map((d, i) => (
+                <div key={i} className={`chip ${i === 0 ? "active" : ""}`} style={{ flexShrink: 0, padding: "8px 16px", borderRadius: 12, textAlign: "center" }}>
+                  <div style={{ fontWeight: 600, fontSize: 12 }}>{d}</div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
+              {slots.map(s => (
+                <div key={s} onClick={() => setSlot(s)} style={{ padding: "12px", borderRadius: 12, border: `2px solid ${slot === s ? "#1A73E8" : "#E5E7EB"}`, background: slot === s ? "#E8F0FE" : "white", cursor: "pointer", textAlign: "center", fontSize: 13, fontWeight: slot === s ? 700 : 500, color: slot === s ? "#1A73E8" : "#4B5563", transition: "all 0.2s" }}>
+                  {s}
+                </div>
+              ))}
+            </div>
+
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>Service Address *</label>
+              <input className="input-field" placeholder="Enter full address" defaultValue="B-42, Sector 18, Noida - 201301" />
+            </div>
+
+            <button className="btn-primary" onClick={() => setStep(3)} disabled={!slot}>Confirm Time Slot</button>
+          </div>
+        )}
+
+        {step === 3 && (
+          <div className="animate-in">
+            <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>Confirm Booking</h3>
+            <p style={{ fontSize: 13, color: "#6B7280", marginBottom: 16 }}>Review your booking details</p>
+
+            <div className="card" style={{ marginBottom: 14, background: "#F8FAFF" }}>
+              {[
+                { label: "Service", val: "AC Repair" },
+                { label: "Time Slot", val: slot || "2 PM - 4 PM" },
+                { label: "Address", val: "B-42, Sector 18, Noida" },
+                { label: "Problem", val: desc || "AC not cooling properly" },
+              ].map(item => (
+                <div key={item.label} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid #E5E7EB" }}>
+                  <span style={{ fontSize: 13, color: "#6B7280" }}>{item.label}</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: "#1C1C2E", maxWidth: "55%", textAlign: "right" }}>{item.val}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Payment */}
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 10 }}>Payment Method</label>
+              {["UPI / GPay", "Credit / Debit Card", "Cash on Delivery"].map((m, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", border: `2px solid ${i === 0 ? "#1A73E8" : "#E5E7EB"}`, borderRadius: 12, marginBottom: 8, cursor: "pointer", background: i === 0 ? "#E8F0FE" : "white" }}>
+                  <div style={{ width: 18, height: 18, borderRadius: "50%", border: `2px solid ${i === 0 ? "#1A73E8" : "#9CA3AF"}`, background: i === 0 ? "#1A73E8" : "white", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    {i === 0 && <div style={{ width: 8, height: 8, borderRadius: "50%", background: "white" }} />}
+                  </div>
+                  <span style={{ fontSize: 13, fontWeight: 500 }}>{m}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="card" style={{ background: "#E8F0FE", borderRadius: 14, marginBottom: 16 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                <span style={{ fontSize: 13, color: "#6B7280" }}>Inspection Charge</span>
+                <span style={{ fontSize: 13, fontWeight: 600 }}>₹99</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+                <span style={{ fontSize: 13, color: "#6B7280" }}>Platform Fee</span>
+                <span style={{ fontSize: 13, fontWeight: 600 }}>₹20</span>
+              </div>
+              <div style={{ height: 1, background: "#C7D7F6", marginBottom: 8 }} />
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ fontSize: 15, fontWeight: 700 }}>Total Payable</span>
+                <span style={{ fontSize: 15, fontWeight: 800, color: "#1A73E8" }}>₹119</span>
+              </div>
+            </div>
+
+            <button className="btn-primary" onClick={onConfirm}>Confirm & Book → </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// SCREEN 5: Live Tracking
+const LiveTrackingScreen = ({ onBack }) => {
+  const [eta, setEta] = useState(12);
+  useEffect(() => {
+    const t = setInterval(() => setEta(p => p > 0 ? p - 1 : 0), 3000);
+    return () => clearInterval(t);
+  }, []);
+
+  return (
+    <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+      {/* Map */}
+      <div className="map-bg" style={{ flex: 1, minHeight: 340, position: "relative" }}>
+        <div className="map-grid" />
+        {/* Fake route */}
+        <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}>
+          <path d="M80 300 Q150 240 200 200 Q240 160 300 120" stroke="#1A73E8" strokeWidth="4" fill="none" strokeDasharray="10 6" opacity="0.7" />
+        </svg>
+        {/* Tech marker */}
+        <div style={{ position: "absolute", left: "20%", top: "75%", transform: "translate(-50%,-50%)" }}>
+          <div style={{ width: 44, height: 44, background: "#1A73E8", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, border: "3px solid white", boxShadow: "0 4px 12px rgba(26,115,232,0.4)", animation: "pulse 2s infinite" }}>🛵</div>
+        </div>
+        {/* Home marker */}
+        <div style={{ position: "absolute", right: "20%", top: "30%", transform: "translate(50%,-50%)" }}>
+          <div style={{ background: "white", borderRadius: 12, padding: "6px 10px", boxShadow: "0 4px 16px rgba(0,0,0,0.15)", display: "flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 700 }}>
+            <span>🏠</span> Your Home
+          </div>
+          <div style={{ width: 2, height: 16, background: "#F44336", margin: "0 auto" }} />
+          <div style={{ width: 10, height: 10, background: "#F44336", borderRadius: "50%", margin: "0 auto" }} />
+        </div>
+        {/* Back Button */}
+        <button onClick={onBack} style={{ position: "absolute", top: 16, left: 16, background: "white", border: "none", borderRadius: 12, width: 40, height: 40, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 12px rgba(0,0,0,0.1)" }}>←</button>
+      </div>
+
+      {/* Bottom Sheet */}
+      <div style={{ background: "white", borderRadius: "24px 24px 0 0", marginTop: -20, padding: "20px 16px 20px", boxShadow: "0 -4px 20px rgba(0,0,0,0.08)" }}>
+        <div style={{ width: 40, height: 4, background: "#E5E7EB", borderRadius: 4, margin: "0 auto 16px" }} />
+
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+          <AvatarCircle initials="RK" size={52} />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 700, fontSize: 15 }}>Rajesh Kumar</div>
+            <div style={{ fontSize: 12, color: "#6B7280" }}>AC & Cooling Specialist</div>
+            <StarRating rating={4.9} count={234} />
+          </div>
+          <div style={{ textAlign: "center", background: "#E8F0FE", borderRadius: 14, padding: "10px 14px" }}>
+            <div style={{ fontWeight: 800, fontSize: 22, color: "#1A73E8" }}>{eta}</div>
+            <div style={{ fontSize: 10, color: "#6B7280", fontWeight: 600 }}>MIN AWAY</div>
+          </div>
+        </div>
+
+        <div className="card" style={{ background: "#E8F0FE", marginBottom: 14 }}>
+          <JobStatusStepper step={2} />
+        </div>
+
+        <div style={{ display: "flex", gap: 10 }}>
+          <button className="btn-outline" style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "13px" }}>
+            <span>💬</span> Chat
+          </button>
+          <button className="btn-primary" style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "13px" }}>
+            <span>📞</span> Call
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// SCREEN 6: Chat Screen
+const ChatScreen = ({ onBack }) => {
+  const [messages, setMessages] = useState(CHAT_MESSAGES);
+  const [text, setText] = useState("");
+
+  const send = () => {
+    if (!text.trim()) return;
+    setMessages(prev => [...prev, { id: Date.now(), text, sent: true, time: "Now" }]);
+    setText("");
+    setTimeout(() => {
+      setMessages(prev => [...prev, { id: Date.now() + 1, text: "Got it! I'll be there shortly.", sent: false, time: "Now" }]);
+    }, 1200);
+  };
+
+  return (
+    <div style={{ height: "100%", display: "flex", flexDirection: "column", background: "#F8FAFF" }}>
+      {/* Header */}
+      <div style={{ background: "linear-gradient(135deg, #1A73E8, #1557B0)", padding: "14px 16px", display: "flex", alignItems: "center", gap: 12, color: "white" }}>
+        <button onClick={onBack} style={{ background: "rgba(255,255,255,0.15)", border: "none", borderRadius: 10, width: 36, height: 36, cursor: "pointer", color: "white", fontSize: 16 }}>←</button>
+        <AvatarCircle initials="RK" size={40} />
+        <div>
+          <div style={{ fontWeight: 700, fontSize: 15 }}>Rajesh Kumar</div>
+          <div style={{ fontSize: 11, opacity: 0.8 }}>Online • AC Technician</div>
+        </div>
+        <button style={{ marginLeft: "auto", background: "rgba(255,255,255,0.15)", border: "none", borderRadius: 10, width: 36, height: 36, cursor: "pointer", color: "white", fontSize: 18 }}>📞</button>
+      </div>
+
+      {/* Messages */}
+      <div style={{ flex: 1, overflow: "auto", padding: "16px", display: "flex", flexDirection: "column", gap: 10 }}>
+        <div style={{ textAlign: "center", fontSize: 11, color: "#9CA3AF", marginBottom: 4, fontWeight: 500 }}>Today, 10:30 AM</div>
+        {messages.map(m => (
+          <div key={m.id} style={{ display: "flex", flexDirection: "column", alignItems: m.sent ? "flex-end" : "flex-start" }}>
+            <div className={m.sent ? "bubble-sent" : "bubble-recv"}>{m.text}</div>
+            <span style={{ fontSize: 10, color: "#9CA3AF", marginTop: 3 }}>{m.time}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Quick replies */}
+      <div className="scroll-row" style={{ padding: "0 16px 8px" }}>
+        {["What's your ETA?", "Please call me", "Job done?"].map(r => (
+          <div key={r} onClick={() => setText(r)} style={{ flexShrink: 0, padding: "7px 14px", background: "white", border: "1.5px solid #E5E7EB", borderRadius: 20, fontSize: 12, color: "#6B7280", cursor: "pointer" }}>{r}</div>
+        ))}
+      </div>
+
+      {/* Input */}
+      <div style={{ background: "white", borderTop: "1px solid #E5E7EB", padding: "12px 16px", display: "flex", gap: 10, alignItems: "center" }}>
+        <button style={{ background: "#F3F4F6", border: "none", borderRadius: 10, width: 38, height: 38, cursor: "pointer", fontSize: 18 }}>📎</button>
+        <input className="input-field" style={{ flex: 1, padding: "10px 14px" }} placeholder="Type a message..." value={text} onChange={e => setText(e.target.value)} onKeyDown={e => e.key === "Enter" && send()} />
+        <button onClick={send} style={{ background: "linear-gradient(135deg,#1A73E8,#1557B0)", border: "none", borderRadius: 12, width: 42, height: 42, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>📤</button>
+      </div>
+    </div>
+  );
+};
+
+// SCREEN 7: Bookings
+const BookingsScreen = ({ onNavigate }) => {
+  const [tab, setTab] = useState("active");
+
+  return (
+    <div>
+      <div style={{ background: "linear-gradient(135deg,#1A73E8,#1557B0)", padding: "16px 20px 20px", color: "white" }}>
+        <h2 style={{ fontWeight: 800, fontSize: 20, marginBottom: 4 }}>My Bookings</h2>
+        <p style={{ opacity: 0.8, fontSize: 13 }}>{ACTIVE_JOBS.length} active • {PAST_JOBS.length} past jobs</p>
+      </div>
+
+      <div className="tab-bar" style={{ marginTop: 14 }}>
+        {["active", "past"].map(t => (
+          <div key={t} className={`tab-item ${tab === t ? "active" : ""}`} onClick={() => setTab(t)}>
+            {t === "active" ? `Active (${ACTIVE_JOBS.length})` : `Past (${PAST_JOBS.length})`}
+          </div>
+        ))}
+      </div>
+
+      <div style={{ padding: "0 16px 16px" }}>
+        {tab === "active" ? (
+          ACTIVE_JOBS.map(job => (
+            <div key={job.id} className="card" style={{ marginBottom: 12 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 14 }}>{job.service}</div>
+                  <div style={{ fontSize: 12, color: "#6B7280" }}>#{job.id} • {job.tech}</div>
+                </div>
+                <span className="badge badge-orange">{job.status}</span>
+              </div>
+              <div style={{ background: "#F8FAFF", borderRadius: 12, padding: "10px 12px", marginBottom: 10, display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontSize: 16 }}>🕐</span>
+                <span style={{ fontSize: 13, color: "#1A73E8", fontWeight: 600 }}>{job.time}</span>
+              </div>
+              <JobStatusStepper step={job.step} />
+              <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                <button className="btn-outline btn-sm" style={{ flex: 1 }} onClick={() => onNavigate("chat")}>💬 Chat</button>
+                <button className="btn-primary btn-sm" style={{ flex: 1 }} onClick={() => onNavigate("tracking")}>📍 Track</button>
+              </div>
+            </div>
+          ))
+        ) : (
+          PAST_JOBS.map(job => (
+            <div key={job.id} className="card" style={{ marginBottom: 12 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 14 }}>{job.service}</div>
+                  <div style={{ fontSize: 12, color: "#6B7280" }}>#{job.id} • {job.tech}</div>
+                </div>
+                <span className={`badge ${job.status === "Completed" ? "badge-green" : "badge-red"}`}>{job.status}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div style={{ fontSize: 12, color: "#9CA3AF" }}>{job.date}</div>
+                <div style={{ fontWeight: 700, color: "#1C1C2E" }}>{job.price}</div>
+              </div>
+              {job.rating && (
+                <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 4 }}>
+                  {"★".repeat(job.rating).split("").map((_, i) => <span key={i} style={{ fontSize: 14, color: "#FFC107" }}>★</span>)}
+                  {"★".repeat(5 - job.rating).split("").map((_, i) => <span key={i} style={{ fontSize: 14, color: "#E5E7EB" }}>★</span>)}
+                </div>
+              )}
+              {job.status === "Completed" && (
+                <button className="btn-outline btn-sm" style={{ marginTop: 10, width: "100%" }}>Download Invoice</button>
+              )}
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+};
+
+// SCREEN 8: Customer Profile
+const CustomerProfileScreen = ({ onLogout }) => {
+  const [notif, setNotif] = useState(true);
+  const [loc, setLoc] = useState(true);
+
+  const menuItems = [
+    { icon: "📍", label: "Saved Addresses", badge: null },
+    { icon: "💳", label: "Payment Methods", badge: null },
+    { icon: "🏆", label: "Rewards & Points", badge: "250 pts" },
+    { icon: "🎟️", label: "Coupons & Offers", badge: "3 new" },
+    { icon: "❓", label: "Help & Support", badge: null },
+    { icon: "📋", label: "Terms of Service", badge: null },
+  ];
+
+  return (
+    <div>
+      <div style={{ background: "linear-gradient(160deg, #1A73E8, #0D47A1)", padding: "30px 20px 30px", color: "white" }}>
+        <div style={{ display: "flex", gap: 16, alignItems: "center", marginBottom: 20 }}>
+          <AvatarCircle initials="RK" size={70} color="#1A73E8" />
+          <div>
+            <h3 style={{ fontWeight: 800, fontSize: 20 }}>Rahul Kumar</h3>
+            <p style={{ opacity: 0.8, fontSize: 13 }}>rahul.kumar@gmail.com</p>
+            <span className="badge" style={{ background: "rgba(255,255,255,0.2)", color: "white", marginTop: 6 }}>✔️ Verified Account</span>
+          </div>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+          {[{ v: "12", l: "Bookings" }, { v: "4.8", l: "Avg Rating" }, { v: "₹2.4K", l: "Saved" }].map(s => (
+            <div key={s.l} style={{ background: "rgba(255,255,255,0.15)", borderRadius: 12, padding: "10px", textAlign: "center", backdropFilter: "blur(10px)" }}>
+              <div style={{ fontWeight: 800, fontSize: 18 }}>{s.v}</div>
+              <div style={{ fontSize: 10, opacity: 0.8 }}>{s.l}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ padding: 16 }}>
+        {/* Toggle settings */}
+        <div className="card" style={{ marginBottom: 14 }}>
+          <h4 style={{ fontWeight: 700, fontSize: 14, marginBottom: 14 }}>Preferences</h4>
+          {[["Push Notifications", notif, setNotif], ["Location Services", loc, setLoc]].map(([label, val, setter]) => (
+            <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px solid #F3F4F6" }}>
+              <span style={{ fontSize: 14, color: "#374151" }}>{label}</span>
+              <div className={`toggle ${val ? "on" : ""}`} onClick={() => setter(!val)} />
+            </div>
+          ))}
+        </div>
+
+        {/* Menu items */}
+        <div className="card" style={{ marginBottom: 14 }}>
+          {menuItems.map((item, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "13px 0", borderBottom: i < menuItems.length - 1 ? "1px solid #F3F4F6" : "none", cursor: "pointer" }}>
+              <span style={{ fontSize: 20 }}>{item.icon}</span>
+              <span style={{ flex: 1, fontSize: 14, fontWeight: 500 }}>{item.label}</span>
+              {item.badge && <span className="badge badge-orange">{item.badge}</span>}
+              <span style={{ color: "#9CA3AF" }}>›</span>
+            </div>
+          ))}
+        </div>
+
+        <button onClick={onLogout} style={{ width: "100%", padding: 14, background: "#FFEBEE", border: "none", borderRadius: 14, color: "#F44336", fontFamily: "'Poppins',sans-serif", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
+          🚪 Logout
         </button>
       </div>
-      <div class="searchbar">
-        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#9CA3AF" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-        <input type="text" placeholder="Search AC repair, plumbing, bike repair...">
-      </div>
     </div>
+  );
+};
 
-    <div class="promo-banner">
-      <div class="promo-text">
-        <h3>First Booking Free! 🎉</h3>
-        <p>Use code FIXFREE on your first service</p>
-      </div>
-      <div class="promo-tag">CLAIM →</div>
-    </div>
+// ============================================================
+// UNIFIED APP CONTAINER (handles both Customer & Technician)
+// ============================================================
+const CustomerApp = ({ onSwitchMode }) => {
+  const [screen, setScreen] = useState("splash");
+  const [loggedInRole, setLoggedInRole] = useState(null);
+  const [navTab, setNavTab] = useState("home");
 
-    <div class="section">
-      <div class="section-header">
-        <div class="section-title">Services</div>
-        <div class="section-link" onclick="goTo('services')">See all</div>
-      </div>
-    </div>
-    <div class="categories-scroll">
-      <div class="cat-card active" onclick="goTo('services')">
-        <div class="cat-icon" style="background:#EFF6FF">⚡</div>
-        <div class="cat-name">Electrician</div>
-      </div>
-      <div class="cat-card" onclick="goTo('services')">
-        <div class="cat-icon" style="background:#F0FDF4">🔧</div>
-        <div class="cat-name">Plumber</div>
-      </div>
-      <div class="cat-card" onclick="goTo('services')">
-        <div class="cat-icon" style="background:#FFF7ED">❄️</div>
-        <div class="cat-name">AC Repair</div>
-      </div>
-      <div class="cat-card" onclick="goTo('services')">
-        <div class="cat-icon" style="background:#FDF4FF">🏍️</div>
-        <div class="cat-name">Bike Repair</div>
-      </div>
-      <div class="cat-card" onclick="goTo('services')">
-        <div class="cat-icon" style="background:#FFF1F2">📱</div>
-        <div class="cat-name">Mobile Repair</div>
-      </div>
-      <div class="cat-card" onclick="goTo('services')">
-        <div class="cat-icon" style="background:#F0FDF4">🪚</div>
-        <div class="cat-name">Carpenter</div>
-      </div>
-      <div class="cat-card" onclick="goTo('services')">
-        <div class="cat-icon" style="background:#FFFBEB">📺</div>
-        <div class="cat-name">TV Repair</div>
-      </div>
-      <div class="cat-card" onclick="goTo('services')">
-        <div class="cat-icon" style="background:#EFF6FF">🍳</div>
-        <div class="cat-name">Appliance</div>
-      </div>
-    </div>
+  const handleLogin = (role) => {
+    setLoggedInRole(role);
+    setScreen("main");
+  };
 
-    <div class="section" style="margin-top:20px">
-      <div class="section-header">
-        <div class="section-title">Top Rated Experts Near You</div>
-        <div class="section-link">See all</div>
-      </div>
-    </div>
-    <div class="experts-scroll">
-      <div class="expert-card" onclick="goTo('detail')">
-        <div class="expert-badge">⭐ TOP</div>
-        <div class="expert-avatar">👨‍🔧</div>
-        <div class="expert-name">Rahul Sharma</div>
-        <div class="expert-type">Electrician</div>
-        <div class="expert-meta">
-          <div class="rating">⭐ 4.9</div>
-          <div class="distance">1.2 km</div>
-        </div>
-        <button class="btn-book" onclick="event.stopPropagation(); goTo('booking')">Book Now</button>
-      </div>
-      <div class="expert-card" onclick="goTo('detail')">
-        <div class="expert-badge">✅ PRO</div>
-        <div class="expert-avatar">👨‍🔩</div>
-        <div class="expert-name">Suresh Kumar</div>
-        <div class="expert-type">Plumber</div>
-        <div class="expert-meta">
-          <div class="rating">⭐ 4.8</div>
-          <div class="distance">0.8 km</div>
-        </div>
-        <button class="btn-book" onclick="event.stopPropagation(); goTo('booking')">Book Now</button>
-      </div>
-      <div class="expert-card" onclick="goTo('detail')">
-        <div class="expert-badge">⭐ TOP</div>
-        <div class="expert-avatar">🧑‍💻</div>
-        <div class="expert-name">Amit Patel</div>
-        <div class="expert-type">AC Repair</div>
-        <div class="expert-meta">
-          <div class="rating">⭐ 4.7</div>
-          <div class="distance">2.1 km</div>
-        </div>
-        <button class="btn-book" onclick="event.stopPropagation(); goTo('booking')">Book Now</button>
-      </div>
-      <div class="expert-card" onclick="goTo('detail')">
-        <div class="expert-badge">✅ PRO</div>
-        <div class="expert-avatar">👷‍♂️</div>
-        <div class="expert-name">Vikram Singh</div>
-        <div class="expert-type">Bike Repair</div>
-        <div class="expert-meta">
-          <div class="rating">⭐ 4.6</div>
-          <div class="distance">1.7 km</div>
-        </div>
-        <button class="btn-book" onclick="event.stopPropagation(); goTo('booking')">Book Now</button>
-      </div>
-    </div>
-    <div style="height:16px"></div>
-  </div>
+  const custNavItems = [
+    { id: "home", icon: "🏠", label: "Home" },
+    { id: "bookings", icon: "📋", label: "Bookings" },
+    { id: "search", icon: "🔍", label: "Search" },
+    { id: "chat", icon: "💬", label: "Chat" },
+    { id: "profile", icon: "👤", label: "Profile" },
+  ];
 
-  <!-- SERVICES -->
-  <div class="screen" id="services">
-    <div class="page-header">
-      <button class="page-back" onclick="goTo('home')">
-        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2.5"><path d="M15 19l-7-7 7-7"/></svg>
-      </button>
-      <div class="page-title">All Services</div>
-    </div>
-    <div class="filter-row">
-      <div class="filter-chip active">All</div>
-      <div class="filter-chip">Near Me</div>
-      <div class="filter-chip">Top Rated</div>
-      <div class="filter-chip">Price: Low-High</div>
-      <div class="filter-chip">Instant</div>
-    </div>
-    <div style="height:8px"></div>
+  const techNavItems = [
+    { id: "dashboard", icon: "🏠", label: "Dashboard" },
+    { id: "jobs", icon: "📋", label: "Jobs" },
+    { id: "earnings", icon: "💰", label: "Earnings" },
+    { id: "reviews", icon: "⭐", label: "Reviews" },
+    { id: "profile", icon: "👤", label: "Profile" },
+  ];
 
-    <div class="service-card fade-in" onclick="goTo('detail')">
-      <div class="service-img">⚡</div>
-      <div class="service-info">
-        <div class="service-name">Electrical Repair</div>
-        <div class="service-price">₹299 – ₹999</div>
-        <div class="service-meta">
-          <div class="rating">⭐ 4.9</div>
-          <div class="badge-tag">Thane</div>
-        </div>
-        <button class="btn-book-sm" onclick="event.stopPropagation(); goTo('detail')">Book Service</button>
-      </div>
-    </div>
+  if (screen === "splash") return <SplashScreen onNext={() => setScreen("login")} />;
+  if (screen === "login") return <LoginScreen onLogin={handleLogin} />;
+  if (screen === "booking") return <BookingScreen onBack={() => setScreen("main")} onConfirm={() => setScreen("tracking")} />;
+  if (screen === "tracking") return <LiveTrackingScreen onBack={() => setScreen("main")} />;
+  if (screen === "chat") return <ChatScreen onBack={() => setScreen("main")} />;
 
-    <div class="service-card fade-in" onclick="goTo('detail')">
-      <div class="service-img">🔧</div>
-      <div class="service-info">
-        <div class="service-name">Plumbing Service</div>
-        <div class="service-price">₹249 – ₹799</div>
-        <div class="service-meta">
-          <div class="rating">⭐ 4.8</div>
-          <div class="badge-tag">Thane</div>
-        </div>
-        <button class="btn-book-sm" onclick="event.stopPropagation(); goTo('detail')">Book Service</button>
-      </div>
-    </div>
-
-    <div class="service-card fade-in" onclick="goTo('detail')">
-      <div class="service-img">❄️</div>
-      <div class="service-info">
-        <div class="service-name">AC Service & Repair</div>
-        <div class="service-price">₹499 – ₹1499</div>
-        <div class="service-meta">
-          <div class="rating">⭐ 4.7</div>
-          <div class="badge-tag">Thane</div>
-        </div>
-        <button class="btn-book-sm" onclick="event.stopPropagation(); goTo('detail')">Book Service</button>
-      </div>
-    </div>
-
-    <div class="service-card fade-in" onclick="goTo('detail')">
-      <div class="service-img">🏍️</div>
-      <div class="service-info">
-        <div class="service-name">Bike Repair</div>
-        <div class="service-price">₹199 – ₹599</div>
-        <div class="service-meta">
-          <div class="rating">⭐ 4.6</div>
-          <div class="badge-tag">Thane</div>
-        </div>
-        <button class="btn-book-sm" onclick="event.stopPropagation(); goTo('detail')">Book Service</button>
-      </div>
-    </div>
-
-    <div class="service-card fade-in" onclick="goTo('detail')">
-      <div class="service-img">📱</div>
-      <div class="service-info">
-        <div class="service-name">Mobile Repair</div>
-        <div class="service-price">₹199 – ₹799</div>
-        <div class="service-meta">
-          <div class="rating">⭐ 4.8</div>
-          <div class="badge-tag">Thane</div>
-        </div>
-        <button class="btn-book-sm" onclick="event.stopPropagation(); goTo('detail')">Book Service</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- DETAIL -->
-  <div class="screen" id="detail">
-    <div class="detail-img">
-      ⚡
-      <button class="back-btn" onclick="goTo('services')">
-        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#111827" stroke-width="2.5"><path d="M15 19l-7-7 7-7"/></svg>
-      </button>
-    </div>
-    <div class="detail-body fade-in">
-      <div class="detail-title">Electrical Repair & Wiring</div>
-      <div class="detail-price">₹299 – ₹999</div>
-      <div class="detail-rating-row">
-        <div class="detail-rating">⭐ 4.9</div>
-        <div class="detail-reviews">(238 reviews)</div>
-        <div class="badge-tag" style="margin-left:auto">✅ Verified</div>
-      </div>
-
-      <div class="tech-row">
-        <div class="tech-avatar">👨‍🔧</div>
-        <div class="tech-info">
-          <div class="tech-name">Rahul Sharma</div>
-          <div class="tech-type">Senior Electrician • 8 yrs exp • 1.2 km away</div>
-        </div>
-        <div class="rating" style="font-size:14px">⭐ 4.9</div>
-      </div>
-
-      <div style="margin-bottom:6px"><strong style="font-size:15px;color:var(--text)">About This Service</strong></div>
-      <div class="section-desc">Professional electrical repair for home and office. We handle wiring, switchboard fixing, MCB replacement, fan installation, and more. All work guaranteed with 30-day warranty. Our certified electricians arrive with all tools needed.</div>
-
-      <div style="margin-bottom:12px"><strong style="font-size:15px;color:var(--text)">📷 Upload Problem Photo</strong></div>
-      <div class="upload-box" id="uploadBox" onclick="handleUpload()">
-        <div style="font-size:36px" id="uploadIcon">📷</div>
-        <p id="uploadText">Tap to upload a photo of your problem</p>
-        <p style="font-size:11px;color:var(--text3);margin-top:4px">Auto-compressed • Max 300KB</p>
-      </div>
-
-      <button class="btn-confirm" onclick="goTo('booking')">Confirm Booking →</button>
-    </div>
-  </div>
-
-  <!-- BOOKING -->
-  <div class="screen" id="booking">
-    <div class="page-header">
-      <button class="page-back" onclick="goTo('detail')">
-        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2.5"><path d="M15 19l-7-7 7-7"/></svg>
-      </button>
-      <div class="page-title">Schedule Booking</div>
-    </div>
-
-    <div class="booking-section">
-      <div class="tech-row" style="margin-bottom:20px">
-        <div class="tech-avatar">👨‍🔧</div>
-        <div class="tech-info">
-          <div class="tech-name">Rahul Sharma</div>
-          <div class="tech-type">Electrician • ⭐ 4.9 • 1.2 km</div>
-        </div>
-        <div style="font-size:13px;font-weight:700;color:var(--blue)">₹499</div>
-      </div>
-
-      <h3>Select Date</h3>
-      <div class="date-scroll">
-        <div class="date-chip"><div class="day">Tue</div><div class="date">10</div></div>
-        <div class="date-chip active"><div class="day">Wed</div><div class="date">11</div></div>
-        <div class="date-chip"><div class="day">Thu</div><div class="date">12</div></div>
-        <div class="date-chip"><div class="day">Fri</div><div class="date">13</div></div>
-        <div class="date-chip"><div class="day">Sat</div><div class="date">14</div></div>
-        <div class="date-chip"><div class="day">Sun</div><div class="date">15</div></div>
-      </div>
-    </div>
-
-    <div class="booking-section" style="margin-top:20px">
-      <h3>Select Time Slot</h3>
-      <div class="time-grid">
-        <div class="time-chip unavailable">8:00 AM</div>
-        <div class="time-chip">9:00 AM</div>
-        <div class="time-chip active">10:00 AM</div>
-        <div class="time-chip">11:00 AM</div>
-        <div class="time-chip">12:00 PM</div>
-        <div class="time-chip unavailable">1:00 PM</div>
-        <div class="time-chip">2:00 PM</div>
-        <div class="time-chip">3:00 PM</div>
-        <div class="time-chip">4:00 PM</div>
-      </div>
-    </div>
-
-    <div class="booking-section" style="margin-top:20px;padding-bottom:20px">
-      <div class="service-card" style="margin:0;flex-direction:column;gap:8px">
-        <div style="display:flex;justify-content:space-between"><span style="font-size:14px;color:var(--text2)">Service Charge</span><span style="font-weight:600">₹499</span></div>
-        <div style="display:flex;justify-content:space-between"><span style="font-size:14px;color:var(--text2)">Visiting Fee</span><span style="font-weight:600">₹0</span></div>
-        <div style="height:1px;background:var(--border)"></div>
-        <div style="display:flex;justify-content:space-between"><span style="font-weight:700">Total</span><span style="font-weight:800;color:var(--blue);font-size:16px">₹499</span></div>
-      </div>
-      <button class="btn-confirm" style="margin-top:16px" onclick="goTo('tracking')">🔒 Confirm & Pay →</button>
-    </div>
-  </div>
-
-  <!-- TRACKING -->
-  <div class="screen" id="tracking" style="padding-bottom:80px">
-    <div class="page-header">
-      <button class="page-back" onclick="goTo('bookings')">
-        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2.5"><path d="M15 19l-7-7 7-7"/></svg>
-      </button>
-      <div class="page-title">Live Tracking</div>
-    </div>
-
-    <div class="map-area">
-      <div class="map-grid"></div>
-      <div class="route-line"></div>
-      <div class="map-tech-pin">🏍️</div>
-      <div class="map-pin">
-        <div class="map-pin-dot"><span>🏠</span></div>
-      </div>
-    </div>
-
-    <div class="eta-card fade-in">
-      <div class="eta-icon">
-        <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="#2563EB" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-      </div>
-      <div class="eta-text">
-        <h3>8 min away</h3>
-        <p>Rahul Sharma is on the way to your location</p>
-      </div>
-    </div>
-
-    <div class="tracking-actions">
-      <button class="track-btn call">
-        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
-        Call Technician
-      </button>
-      <button class="track-btn chat" onclick="goTo('chat')">
-        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
-        Chat Technician
-      </button>
-    </div>
-
-    <div style="margin:16px">
-      <div class="booking-card">
-        <div class="booking-card-top">
-          <div class="booking-icon">⚡</div>
-          <div class="booking-info">
-            <div class="booking-name">Electrical Repair</div>
-            <div class="booking-tech">Rahul Sharma</div>
+  // ── TECHNICIAN DASHBOARD ──
+  if (loggedInRole === "technician") {
+    const renderTechTab = () => {
+      switch (navTab) {
+        case "dashboard": return <TechDashboard onNavigate={() => {}} />;
+        case "jobs": return <TechJobsScreen />;
+        case "earnings": return <TechEarningsScreen />;
+        case "reviews": return (
+          <div style={{ padding: 16 }}>
+            <div style={{ background: "linear-gradient(135deg, #1C1C2E, #2D2D44)", margin: "-16px -16px 16px", padding: "20px", color: "white", borderRadius: "0 0 20px 20px" }}>
+              <h2 style={{ fontWeight: 800, fontSize: 20, marginBottom: 4 }}>Reviews & Ratings</h2>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontSize: 36, fontWeight: 900, color: "#FFC107" }}>4.9</span>
+                <div><div style={{ color: "#FFC107", fontSize: 18 }}>★★★★★</div><div style={{ fontSize: 12, opacity: 0.7 }}>234 reviews</div></div>
+              </div>
+            </div>
+            {[
+              { name: "Priya M.", date: "Today", rating: 5, text: "Excellent service! Fixed AC in under 2 hours. Very professional." },
+              { name: "Rohit G.", date: "Yesterday", rating: 5, text: "Great technician, knew exactly what the problem was." },
+              { name: "Anita S.", date: "2 days ago", rating: 4, text: "Good service but took a bit longer than expected." },
+            ].map((r, i) => (
+              <div key={i} className="card" style={{ marginBottom: 10 }}>
+                <div style={{ display: "flex", gap: 10, marginBottom: 8 }}>
+                  <AvatarCircle initials={r.name[0]} size={38} color="#6B7280" />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 600, fontSize: 13 }}>{r.name}</div>
+                    <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                      {"★".repeat(r.rating).split("").map((_, j) => <span key={j} style={{ color: "#FFC107", fontSize: 13 }}>★</span>)}
+                      <span style={{ fontSize: 11, color: "#9CA3AF" }}>{r.date}</span>
+                    </div>
+                  </div>
+                </div>
+                <p style={{ fontSize: 13, color: "#4B5563", lineHeight: 1.5 }}>{r.text}</p>
+              </div>
+            ))}
           </div>
-          <div class="status-badge status-active">En Route</div>
+        );
+        case "profile": return <CustomerProfileScreen onLogout={() => { setScreen("login"); setLoggedInRole(null); setNavTab("home"); }} />;
+        default: return <TechDashboard onNavigate={() => {}} />;
+      }
+    };
+
+    return (
+      <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+        <div className="status-bar" style={{ background: "#1C1C2E" }}>
+          <span>9:41</span>
+          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.6)", fontWeight: 600 }}>🛠️ Technician</span>
+          <span>●●●</span>
         </div>
-        <div style="display:flex;gap:8px;font-size:13px;color:var(--text2)">
-          <span>📅 Wed, Mar 11</span>
-          <span>⏰ 10:00 AM</span>
-          <span style="margin-left:auto;font-weight:700;color:var(--blue)">₹499</span>
+        <div style={{ flex: 1, overflow: "auto" }}>
+          <div className="screen-enter">{renderTechTab()}</div>
         </div>
+        <BottomNav items={techNavItems} active={navTab} onChange={setNavTab} />
       </div>
-    </div>
-  </div>
+    );
+  }
 
-  <!-- BOOKINGS -->
-  <div class="screen" id="bookings">
-    <div class="page-header">
-      <button class="page-back" onclick="goTo('home')">
-        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2.5"><path d="M15 19l-7-7 7-7"/></svg>
-      </button>
-      <div class="page-title">My Bookings</div>
-    </div>
-
-    <div class="tab-row">
-      <div class="tab active">Active (2)</div>
-      <div class="tab">Completed (8)</div>
-    </div>
-
-    <div class="booking-card fade-in" style="margin-top:16px">
-      <div class="booking-card-top">
-        <div class="booking-icon">⚡</div>
-        <div class="booking-info">
-          <div class="booking-name">Electrical Repair</div>
-          <div class="booking-tech">Rahul Sharma</div>
-        </div>
-        <div class="status-badge status-active">En Route</div>
-      </div>
-      <div class="booking-footer">
-        <div class="booking-date">📅 Wed, Mar 11 • 10:00 AM</div>
-        <button class="btn-track" onclick="goTo('tracking')">Track →</button>
-      </div>
-    </div>
-
-    <div class="booking-card fade-in">
-      <div class="booking-card-top">
-        <div class="booking-icon">❄️</div>
-        <div class="booking-info">
-          <div class="booking-name">AC Service</div>
-          <div class="booking-tech">Amit Patel</div>
-        </div>
-        <div class="status-badge" style="background:#EFF6FF;color:var(--blue)">Confirmed</div>
-      </div>
-      <div class="booking-footer">
-        <div class="booking-date">📅 Thu, Mar 12 • 2:00 PM</div>
-        <button class="btn-track" onclick="goTo('chat')">Chat →</button>
-      </div>
-    </div>
-
-    <div class="booking-card fade-in">
-      <div class="booking-card-top">
-        <div class="booking-icon">🔧</div>
-        <div class="booking-info">
-          <div class="booking-name">Plumbing Fix</div>
-          <div class="booking-tech">Suresh Kumar</div>
-        </div>
-        <div class="status-badge status-done">Completed</div>
-      </div>
-      <div class="booking-footer">
-        <div class="booking-date">📅 Sun, Mar 8 • 11:00 AM</div>
-        <button class="btn-track" style="background:var(--text3)">Review</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- CHAT -->
-  <div class="screen" id="chat" style="padding-bottom:0">
-    <div class="chat-header">
-      <button class="page-back" onclick="goTo('tracking')" style="background:rgba(255,255,255,0.15);border:none;width:36px;height:36px;border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer">
-        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2.5"><path d="M15 19l-7-7 7-7"/></svg>
-      </button>
-      <div class="chat-avatar">👨‍🔧</div>
-      <div class="chat-info">
-        <h3>Rahul Sharma</h3>
-        <div class="chat-online"><div class="online-dot"></div><p>Online now</p></div>
-      </div>
-    </div>
-
-    <div class="chat-messages fade-in">
-      <div class="msg received">
-        <div class="msg-bubble">Hello! I've accepted your booking for electrical repair. I'll be there by 10 AM.</div>
-        <div class="msg-time">9:42 AM</div>
-      </div>
-      <div class="msg sent">
-        <div class="msg-bubble">Great! Please bring a replacement switchboard for the bedroom.</div>
-        <div class="msg-time">9:44 AM</div>
-      </div>
-      <div class="msg received">
-        <div class="msg-bubble">Sure, I'll bring a standard 8-module switchboard. Can you confirm the brand preference?</div>
-        <div class="msg-time">9:45 AM</div>
-      </div>
-      <div class="msg sent">
-        <div class="msg-bubble">Legrand would be great if available!</div>
-        <div class="msg-time">9:46 AM</div>
-      </div>
-      <div class="msg received">
-        <div class="msg-bubble">Perfect! I have that. I'm on my way now, ETA 8 minutes 🏍️</div>
-        <div class="msg-time">9:52 AM</div>
-      </div>
-    </div>
-
-    <div class="chat-input">
-      <input type="text" placeholder="Type a message...">
-      <button class="send-btn">
-        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-      </button>
-    </div>
-  </div>
-
-  <!-- PROFILE -->
-  <div class="screen" id="profile">
-    <div class="profile-hero">
-      <div class="profile-avatar">😊</div>
-      <div class="profile-name">Arjun Desai</div>
-      <div class="profile-email">arjun.desai@gmail.com</div>
-      <div class="profile-stats">
-        <div class="stat"><div class="stat-num">12</div><div class="stat-label">Bookings</div></div>
-        <div class="stat"><div class="stat-num">4.8</div><div class="stat-label">Rating</div></div>
-        <div class="stat"><div class="stat-num">₹2.4k</div><div class="stat-label">Saved</div></div>
-      </div>
-    </div>
-
-    <div class="profile-menu">
-      <div class="menu-item">
-        <div class="menu-icon" style="background:#EFF6FF">📍</div>
-        <div>
-          <h4>Saved Addresses</h4>
-          <p>Home, Office & more</p>
-        </div>
-        <div class="menu-arrow">›</div>
-      </div>
-      <div class="menu-item">
-        <div class="menu-icon" style="background:#F0FDF4">💳</div>
-        <div>
-          <h4>Payment Methods</h4>
-          <p>UPI, Cards, Wallets</p>
-        </div>
-        <div class="menu-arrow">›</div>
-      </div>
-      <div class="menu-item">
-        <div class="menu-icon" style="background:#FFFBEB">🎁</div>
-        <div>
-          <h4>Offers & Coupons</h4>
-          <p>3 offers available</p>
-        </div>
-        <div class="menu-arrow">›</div>
-      </div>
-      <div class="menu-item">
-        <div class="menu-icon" style="background:#FFF1F2">🛡️</div>
-        <div>
-          <h4>Help & Support</h4>
-          <p>FAQs, Contact us</p>
-        </div>
-        <div class="menu-arrow">›</div>
-      </div>
-      <div class="menu-item" onclick="goTo('login')">
-        <div class="menu-icon" style="background:#FEF2F2">🚪</div>
-        <div>
-          <h4>Sign Out</h4>
-          <p>See you soon!</p>
-        </div>
-        <div class="menu-arrow">›</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- BOTTOM NAV -->
-  <div class="bottom-nav" id="bottomNav">
-    <div class="nav-item active" id="nav-home" onclick="goTo('home')">
-      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-      <span class="nav-label">Home</span>
-    </div>
-    <div class="nav-item" id="nav-bookings" onclick="goTo('bookings')">
-      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-      <span class="nav-label">Bookings</span>
-    </div>
-    <div class="nav-center">
-      <div class="fab" onclick="goTo('services')">
-        <svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2.5"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
-      </div>
-    </div>
-    <div class="nav-item" id="nav-chat" onclick="goTo('chat')">
-      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
-      <span class="nav-label">Chat</span>
-    </div>
-    <div class="nav-item" id="nav-profile" onclick="goTo('profile')">
-      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-      <span class="nav-label">Profile</span>
-    </div>
-  </div>
-
-</div>
-
-<script>
-  const navScreens = ['home','bookings','chat','profile'];
-  let currentScreen = 'splash';
-
-  function goTo(id) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    const el = document.getElementById(id);
-    if (el) {
-      el.classList.add('active');
-      el.scrollTop = 0;
-      currentScreen = id;
+  // ── CUSTOMER DASHBOARD ──
+  const renderCustTab = () => {
+    switch (navTab) {
+      case "home": return <CustomerHome onNavigate={setScreen} />;
+      case "bookings": return <BookingsScreen onNavigate={setScreen} />;
+      case "search": return <CustomerHome onNavigate={setScreen} />;
+      case "chat": return <ChatScreen onBack={() => setNavTab("home")} />;
+      case "profile": return <CustomerProfileScreen onLogout={() => { setScreen("login"); setLoggedInRole(null); setNavTab("home"); }} />;
+      default: return <CustomerHome onNavigate={setScreen} />;
     }
-    // Show/hide nav
-    const nav = document.getElementById('bottomNav');
-    const hideNav = ['splash','login','chat'].includes(id);
-    nav.style.display = hideNav ? 'none' : 'flex';
-    // Active nav
-    document.querySelectorAll('.nav-item[id^="nav-"]').forEach(n => n.classList.remove('active'));
-    const ni = document.getElementById('nav-' + id);
-    if (ni) ni.classList.add('active');
-  }
+  };
 
-  function handleUpload() {
-    const box = document.getElementById('uploadBox');
-    const icon = document.getElementById('uploadIcon');
-    const text = document.getElementById('uploadText');
-    icon.textContent = '✅';
-    text.textContent = 'problem_photo.jpg uploaded (284 KB)';
-    box.style.borderColor = 'var(--success)';
-    box.style.background = '#F0FDF4';
-    text.style.color = 'var(--success)';
-  }
+  return (
+    <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+      <div className="status-bar">
+        <span>9:41</span>
+        <span style={{ fontSize: 10, color: "rgba(255,255,255,0.8)", fontWeight: 600 }}>👤 Customer</span>
+        <span>●●●</span>
+      </div>
+      <div style={{ flex: 1, overflow: "auto" }}>
+        <div className="screen-enter">{renderCustTab()}</div>
+      </div>
+      {navTab !== "chat" && <BottomNav items={custNavItems} active={navTab} onChange={setNavTab} />}
+    </div>
+  );
+};
 
-  // Date/time chip clicks
-  document.querySelectorAll('.date-chip').forEach(c => {
-    c.addEventListener('click', () => {
-      document.querySelectorAll('.date-chip').forEach(x => x.classList.remove('active'));
-      c.classList.add('active');
-    });
-  });
-  document.querySelectorAll('.time-chip:not(.unavailable)').forEach(c => {
-    c.addEventListener('click', () => {
-      document.querySelectorAll('.time-chip').forEach(x => x.classList.remove('active'));
-      c.classList.add('active');
-    });
-  });
-  document.querySelectorAll('.filter-chip').forEach(c => {
-    c.addEventListener('click', () => {
-      document.querySelectorAll('.filter-chip').forEach(x => x.classList.remove('active'));
-      c.classList.add('active');
-    });
-  });
-  document.querySelectorAll('.cat-card').forEach(c => {
-    c.addEventListener('click', () => {
-      document.querySelectorAll('.cat-card').forEach(x => x.classList.remove('active'));
-      c.classList.add('active');
-    });
-  });
+// ============================================================
+// TECHNICIAN APP SCREENS
+// ============================================================
 
-  // Auto splash
-  setTimeout(() => goTo('login'), 2800);
-</script>
-</body>
-</html>
+const TechDashboard = ({ onNavigate }) => {
+  const [available, setAvailable] = useState(true);
+  const days = ["M", "T", "W", "T", "F", "S", "S"];
+  const earnings = [45, 72, 58, 90, 65, 80, 55];
+
+  return (
+    <div>
+      {/* Header */}
+      <div style={{ background: "linear-gradient(135deg, #1C1C2E 0%, #2D2D44 100%)", padding: "16px 20px 24px", color: "white" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+          <div>
+            <div style={{ fontSize: 13, opacity: 0.7, marginBottom: 2 }}>📍 Noida, UP</div>
+            <h2 style={{ fontWeight: 800, fontSize: 20, fontFamily: "'Space Grotesk',sans-serif" }}>Rajesh Kumar</h2>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4 }}>
+              <span className="stars" style={{ fontSize: 12 }}>★★★★★</span>
+              <span style={{ fontSize: 12, opacity: 0.8 }}>4.9 • 540 jobs</span>
+            </div>
+          </div>
+          <div style={{ textAlign: "right" }}>
+            <div style={{ fontSize: 11, opacity: 0.7, marginBottom: 6 }}>{available ? "You're Online" : "You're Offline"}</div>
+            <div className={`toggle ${available ? "on" : ""}`} onClick={() => setAvailable(!available)} />
+          </div>
+        </div>
+
+        {/* Earnings Summary */}
+        <div style={{ background: "rgba(255,255,255,0.08)", borderRadius: 16, padding: "14px", backdropFilter: "blur(10px)" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 14 }}>
+            {[{ v: "₹2,450", l: "Today" }, { v: "₹14,200", l: "This Week" }, { v: "₹52,800", l: "This Month" }].map(s => (
+              <div key={s.l} style={{ textAlign: "center" }}>
+                <div style={{ fontWeight: 800, fontSize: 15, color: "#60A5FA" }}>{s.v}</div>
+                <div style={{ fontSize: 10, opacity: 0.7 }}>{s.l}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ fontSize: 11, opacity: 0.6, marginBottom: 6 }}>Weekly Earnings</div>
+          <div className="bar-chart" style={{ height: 60 }}>
+            {days.map((d, i) => (
+              <div key={i} className="bar-col">
+                <div className="bar-fill" style={{ height: `${(earnings[i] / 90) * 100}%`, background: i === 3 ? "linear-gradient(180deg, #FF8A00, #E67A00)" : "linear-gradient(180deg, #60A5FA, #1A73E8)" }} />
+                <div className="bar-label" style={{ color: "rgba(255,255,255,0.5)" }}>{d}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Today's Stats */}
+      <div style={{ padding: "16px 16px 0" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 16 }}>
+          {[{ v: "4", l: "Today's Jobs", c: "#E8F0FE", t: "#1A73E8" }, { v: "2", l: "Pending", c: "#FFF3E0", t: "#FF8A00" }, { v: "2", l: "Completed", c: "#E8F5E9", t: "#00C853" }].map(s => (
+            <div key={s.l} style={{ background: s.c, borderRadius: 14, padding: "12px 10px", textAlign: "center" }}>
+              <div style={{ fontWeight: 800, fontSize: 22, color: s.t }}>{s.v}</div>
+              <div style={{ fontSize: 10, color: s.t, fontWeight: 600 }}>{s.l}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Incoming Requests */}
+        <div className="section-title" style={{ padding: 0, marginBottom: 12 }}>
+          <span>Incoming Requests</span>
+          <span className="badge badge-orange">2 New</span>
+        </div>
+
+        {TECH_INCOMING_JOBS.map(job => (
+          <div key={job.id} className="card" style={{ marginBottom: 12, border: job.urgent ? "2px solid #FF8A00" : "1px solid #E5E7EB" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontWeight: 700, fontSize: 14 }}>{job.service}</span>
+                  {job.urgent && <span className="badge badge-orange">Urgent</span>}
+                </div>
+                <div style={{ fontSize: 12, color: "#6B7280" }}>{job.user}</div>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <div style={{ fontWeight: 800, fontSize: 16, color: "#1A73E8" }}>{job.price}</div>
+                <div style={{ fontSize: 11, color: "#6B7280" }}>📍 {job.distance}</div>
+              </div>
+            </div>
+            <div style={{ fontSize: 12, color: "#4B5563", marginBottom: 10, background: "#F8FAFF", padding: "8px 10px", borderRadius: 10 }}>
+              📝 {job.desc}
+            </div>
+            <div style={{ fontSize: 12, color: "#6B7280", marginBottom: 12 }}>🕐 {job.time} • {job.address}</div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button className="btn-outline btn-sm" style={{ flex: 1, borderColor: "#F44336", color: "#F44336" }}>✗ Decline</button>
+              <button className="btn-accent btn-sm" style={{ flex: 1 }}>✓ Accept Job</button>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div style={{ height: 16 }} />
+    </div>
+  );
+};
+
+const TechJobsScreen = () => {
+  const [tab, setTab] = useState("active");
+
+  return (
+    <div>
+      <div style={{ background: "linear-gradient(135deg, #1C1C2E, #2D2D44)", padding: "16px 20px 20px", color: "white" }}>
+        <h2 style={{ fontWeight: 800, fontSize: 20 }}>My Jobs</h2>
+      </div>
+      <div className="tab-bar" style={{ marginTop: 14 }}>
+        {["active", "completed"].map(t => (
+          <div key={t} className={`tab-item ${tab === t ? "active" : ""}`} onClick={() => setTab(t)}>
+            {t.charAt(0).toUpperCase() + t.slice(1)}
+          </div>
+        ))}
+      </div>
+      <div style={{ padding: "0 16px 16px" }}>
+        {ACTIVE_JOBS.map(job => (
+          <div key={job.id} className="card" style={{ marginBottom: 12 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 14 }}>{job.service}</div>
+                <div style={{ fontSize: 12, color: "#6B7280" }}>#{job.id}</div>
+              </div>
+              <span className="badge badge-blue">{job.status}</span>
+            </div>
+            <div style={{ marginBottom: 12 }}>
+              <JobStatusStepper step={job.step} />
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button className="btn-outline btn-sm" style={{ flex: 1 }}>📍 Navigate</button>
+              <button className="btn-primary btn-sm" style={{ flex: 1 }}>Update Status</button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const TechEarningsScreen = () => {
+  return (
+    <div>
+      <div style={{ background: "linear-gradient(135deg, #1C1C2E, #2D2D44)", padding: "16px 20px 24px", color: "white" }}>
+        <h2 style={{ fontWeight: 800, fontSize: 20, marginBottom: 16 }}>Earnings</h2>
+        <div style={{ background: "rgba(255,255,255,0.08)", borderRadius: 16, padding: "20px", textAlign: "center" }}>
+          <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 6 }}>Available Balance</div>
+          <div style={{ fontWeight: 900, fontSize: 36, fontFamily: "'Space Grotesk',sans-serif", color: "#60A5FA" }}>₹14,200</div>
+          <button className="btn-accent btn-sm" style={{ marginTop: 12 }}>Withdraw to Bank</button>
+        </div>
+      </div>
+
+      <div style={{ padding: 16 }}>
+        <div className="section-title" style={{ padding: 0, marginBottom: 12 }}>Transaction History</div>
+        {[
+          { service: "AC Repair", user: "Priya M.", date: "Today 2:30 PM", amt: "+₹499", status: "Credited" },
+          { service: "TV Repair", user: "Rohit G.", date: "Today 11:00 AM", amt: "+₹349", status: "Credited" },
+          { service: "Fan Repair", user: "Anita S.", date: "Yesterday", amt: "+₹199", status: "Credited" },
+          { service: "Platform Fee", user: "FixMate", date: "Yesterday", amt: "-₹50", status: "Deducted" },
+        ].map((t, i) => (
+          <div key={i} className="card" style={{ marginBottom: 10, display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ width: 42, height: 42, borderRadius: 14, background: t.status === "Deducted" ? "#FFEBEE" : "#E8F5E9", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>
+              {t.status === "Deducted" ? "💸" : "💰"}
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 600, fontSize: 13 }}>{t.service}</div>
+              <div style={{ fontSize: 11, color: "#9CA3AF" }}>{t.user} • {t.date}</div>
+            </div>
+            <div style={{ fontWeight: 700, fontSize: 15, color: t.status === "Deducted" ? "#F44336" : "#00C853" }}>{t.amt}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+
+
+// ============================================================
+// ADMIN DASHBOARD
+// ============================================================
+const AdminDashboard = () => {
+  const [section, setSection] = useState("overview");
+  const [techAction, setTechAction] = useState({});
+
+  const navItems = [
+    { id: "overview", icon: "📊", label: "Overview" },
+    { id: "technicians", icon: "🛠️", label: "Technicians" },
+    { id: "jobs", icon: "📋", label: "Jobs" },
+    { id: "users", icon: "👥", label: "Users" },
+    { id: "payments", icon: "💳", label: "Payments" },
+    { id: "categories", icon: "📦", label: "Categories" },
+    { id: "analytics", icon: "📈", label: "Analytics" },
+    { id: "settings", icon: "⚙️", label: "Settings" },
+  ];
+
+  const renderSection = () => {
+    switch (section) {
+      case "overview":
+        return (
+          <div style={{ padding: 24 }}>
+            <div style={{ marginBottom: 24 }}>
+              <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 4 }}>Dashboard Overview</h2>
+              <p style={{ color: "#6B7280", fontSize: 14 }}>Tuesday, March 10, 2026</p>
+            </div>
+
+            {/* Stats Grid */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 24 }}>
+              {ADMIN_STATS.map(s => (
+                <div key={s.label} className="stat-card">
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+                    <div style={{ width: 44, height: 44, borderRadius: 14, background: s.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>
+                      <Icon name={s.icon} />
+                    </div>
+                    <span style={{ fontSize: 12, color: "#00C853", fontWeight: 600, background: "#E8F5E9", padding: "3px 8px", borderRadius: 20 }}>{s.trend}</span>
+                  </div>
+                  <div style={{ fontWeight: 900, fontSize: 26, color: s.color, marginBottom: 2, fontFamily: "'Space Grotesk',sans-serif" }}>{s.value}</div>
+                  <div style={{ fontSize: 13, color: "#6B7280" }}>{s.label}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Charts Row */}
+            <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr", gap: 16, marginBottom: 24 }}>
+              {/* Weekly Chart */}
+              <div className="stat-card">
+                <h3 style={{ fontWeight: 700, fontSize: 15, marginBottom: 16 }}>Weekly Bookings</h3>
+                <div className="bar-chart" style={{ height: 120 }}>
+                  {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d, i) => {
+                    const vals = [52, 68, 45, 78, 90, 110, 74];
+                    return (
+                      <div key={d} className="bar-col">
+                        <div style={{ fontSize: 11, color: "#6B7280", fontWeight: 600, marginBottom: 4 }}>{vals[i]}</div>
+                        <div className={`bar-fill ${i === 4 ? "accent" : ""}`} style={{ height: `${(vals[i] / 110) * 100}%` }} />
+                        <div className="bar-label">{d}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Service Breakdown */}
+              <div className="stat-card">
+                <h3 style={{ fontWeight: 700, fontSize: 15, marginBottom: 16 }}>Top Services</h3>
+                {[
+                  { name: "AC Repair", pct: 34, color: "#1A73E8" },
+                  { name: "TV Repair", pct: 22, color: "#9C27B0" },
+                  { name: "Electrician", pct: 18, color: "#FF8A00" },
+                  { name: "Plumbing", pct: 15, color: "#00C853" },
+                  { name: "Others", pct: 11, color: "#6B7280" },
+                ].map(s => (
+                  <div key={s.name} style={{ marginBottom: 12 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
+                      <span style={{ fontSize: 12, fontWeight: 500 }}>{s.name}</span>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: s.color }}>{s.pct}%</span>
+                    </div>
+                    <div className="progress-bar">
+                      <div className="progress-fill" style={{ width: `${s.pct}%`, background: s.color }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Pending Verification */}
+            <div className="stat-card">
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                <h3 style={{ fontWeight: 700, fontSize: 15 }}>Pending Verifications</h3>
+                <span className="badge badge-orange">{PENDING_TECHS.length} pending</span>
+              </div>
+              {PENDING_TECHS.map(t => (
+                <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 0", borderBottom: "1px solid #F3F4F6" }}>
+                  <AvatarCircle initials={t.name.split(" ").map(n => n[0]).join("")} size={42} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 600, fontSize: 14 }}>{t.name}</div>
+                    <div style={{ fontSize: 12, color: "#6B7280" }}>{t.service} • {t.city} • {t.exp}</div>
+                  </div>
+                  <span style={{ fontSize: 11, color: "#9CA3AF" }}>{t.submitted}</span>
+                  <div style={{ display: "flex", gap: 6 }}>
+                    <button onClick={() => setTechAction({ ...techAction, [t.id]: "approved" })} style={{ padding: "6px 14px", background: techAction[t.id] === "approved" ? "#00C853" : "#E8F5E9", color: techAction[t.id] === "approved" ? "white" : "#00C853", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                      {techAction[t.id] === "approved" ? "✓ Approved" : "Approve"}
+                    </button>
+                    <button onClick={() => setTechAction({ ...techAction, [t.id]: "rejected" })} style={{ padding: "6px 14px", background: techAction[t.id] === "rejected" ? "#F44336" : "#FFEBEE", color: techAction[t.id] === "rejected" ? "white" : "#F44336", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                      {techAction[t.id] === "rejected" ? "✗ Rejected" : "Reject"}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+
+      case "jobs":
+        return (
+          <div style={{ padding: 24 }}>
+            <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 20 }}>Job Management</h2>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 12, marginBottom: 24 }}>
+              {[{ v: "428", l: "Total Today", c: "#1A73E8", bg: "#E8F0FE" }, { v: "12", l: "Active Now", c: "#FF8A00", bg: "#FFF3E0" }, { v: "398", l: "Completed", c: "#00C853", bg: "#E8F5E9" }, { v: "18", l: "Cancelled", c: "#F44336", bg: "#FFEBEE" }].map(s => (
+                <div key={s.l} className="stat-card" style={{ textAlign: "center" }}>
+                  <div style={{ fontWeight: 900, fontSize: 28, color: s.c, fontFamily: "'Space Grotesk',sans-serif" }}>{s.v}</div>
+                  <div style={{ fontSize: 13, color: "#6B7280" }}>{s.l}</div>
+                </div>
+              ))}
+            </div>
+
+            <div className="stat-card">
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                <h3 style={{ fontWeight: 700, fontSize: 15 }}>All Jobs</h3>
+                <input placeholder="Search jobs..." style={{ padding: "8px 14px", border: "1.5px solid #E5E7EB", borderRadius: 10, fontSize: 13, outline: "none", fontFamily: "inherit" }} />
+              </div>
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <thead>
+                  <tr style={{ background: "#F8FAFF" }}>
+                    {["Job ID", "Customer", "Technician", "Service", "Status", "Amount", "Date"].map(h => (
+                      <th key={h} style={{ padding: "10px 12px", textAlign: "left", fontSize: 12, color: "#6B7280", fontWeight: 700, borderBottom: "1px solid #E5E7EB" }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {ALL_JOBS_ADMIN.map((job, i) => (
+                    <tr key={job.id} style={{ borderBottom: "1px solid #F3F4F6" }}>
+                      <td style={{ padding: "12px", fontSize: 13, fontWeight: 700, color: "#1A73E8" }}>#{job.id}</td>
+                      <td style={{ padding: "12px", fontSize: 13 }}>{job.user}</td>
+                      <td style={{ padding: "12px", fontSize: 13 }}>{job.tech}</td>
+                      <td style={{ padding: "12px", fontSize: 13 }}>{job.service}</td>
+                      <td style={{ padding: "12px" }}>
+                        <span className={`badge ${job.status === "Active" ? "badge-blue" : job.status === "Completed" ? "badge-green" : "badge-red"}`}>{job.status}</span>
+                      </td>
+                      <td style={{ padding: "12px", fontSize: 13, fontWeight: 700 }}>{job.amount}</td>
+                      <td style={{ padding: "12px", fontSize: 12, color: "#6B7280" }}>{job.date}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        );
+
+      case "technicians":
+        return (
+          <div style={{ padding: 24 }}>
+            <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 20 }}>Technician Management</h2>
+            <div className="stat-card">
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                <h3 style={{ fontWeight: 700, fontSize: 15 }}>All Technicians</h3>
+                <div style={{ display: "flex", gap: 10 }}>
+                  <input placeholder="Search..." style={{ padding: "8px 14px", border: "1.5px solid #E5E7EB", borderRadius: 10, fontSize: 13, outline: "none", fontFamily: "inherit" }} />
+                  <button className="btn-primary btn-sm">Add Technician</button>
+                </div>
+              </div>
+              {TECHNICIANS.map(t => (
+                <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 0", borderBottom: "1px solid #F3F4F6" }}>
+                  <div style={{ position: "relative" }}>
+                    <AvatarCircle initials={t.avatar} size={46} />
+                    {t.available && <div style={{ position: "absolute", bottom: 0, right: 0, width: 12, height: 12, background: "#00C853", borderRadius: "50%", border: "2px solid white" }} />}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3 }}>
+                      <span style={{ fontWeight: 700, fontSize: 14 }}>{t.name}</span>
+                      {t.verified && <span style={{ fontSize: 11, color: "#1A73E8" }}>✔️ Verified</span>}
+                    </div>
+                    <div style={{ fontSize: 12, color: "#6B7280" }}>{t.service} • {t.exp} • {t.jobs} jobs</div>
+                    <StarRating rating={t.rating} count={t.reviews} />
+                  </div>
+                  <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                    <span className={`badge ${t.available ? "badge-green" : "badge-grey"}`}>{t.available ? "Online" : "Offline"}</span>
+                    <button style={{ padding: "6px 12px", background: "#FFEBEE", color: "#F44336", border: "none", borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: "pointer" }}>Suspend</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+
+      case "analytics":
+        return (
+          <div style={{ padding: 24 }}>
+            <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 20 }}>Analytics & Reports</h2>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+              {[
+                { title: "Revenue Trend", val: "₹8.4L", sub: "This Month", trend: "+18%", desc: "Monthly revenue growing steadily with AC and TV repair leading" },
+                { title: "User Growth", val: "24,891", sub: "Total Users", trend: "+12%", desc: "New user registrations up 12% compared to last month" },
+                { title: "Job Completion Rate", val: "94.2%", sub: "Success Rate", trend: "+2.1%", desc: "Cancellations down, customer satisfaction improving" },
+                { title: "Avg Response Time", val: "8.5 min", sub: "Technician ETA", trend: "-15%", desc: "Faster technician dispatch due to better coverage" },
+              ].map(c => (
+                <div key={c.title} className="stat-card">
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+                    <div>
+                      <div style={{ fontSize: 13, color: "#6B7280", marginBottom: 4 }}>{c.title}</div>
+                      <div style={{ fontWeight: 900, fontSize: 30, color: "#1A73E8", fontFamily: "'Space Grotesk',sans-serif" }}>{c.val}</div>
+                      <div style={{ fontSize: 12, color: "#6B7280" }}>{c.sub}</div>
+                    </div>
+                    <span style={{ fontSize: 12, color: "#00C853", fontWeight: 700, background: "#E8F5E9", padding: "4px 10px", borderRadius: 20 }}>{c.trend}</span>
+                  </div>
+                  <p style={{ fontSize: 12, color: "#9CA3AF", lineHeight: 1.6 }}>{c.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+
+      default:
+        return (
+          <div style={{ padding: 24, display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
+            <div style={{ textAlign: "center", color: "#9CA3AF" }}>
+              <div style={{ fontSize: 48, marginBottom: 12 }}>🔧</div>
+              <div style={{ fontSize: 16, fontWeight: 600 }}>Section coming soon</div>
+            </div>
+          </div>
+        );
+    }
+  };
+
+  return (
+    <div style={{ display: "flex", height: "100%" }}>
+      {/* Sidebar */}
+      <div className="admin-sidebar">
+        <div style={{ padding: "20px 16px 16px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ width: 36, height: 36, background: "linear-gradient(135deg,#1A73E8,#1557B0)", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>🔧</div>
+            <div>
+              <div style={{ fontWeight: 800, fontSize: 15, fontFamily: "'Space Grotesk',sans-serif" }}>FixMate</div>
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.5)" }}>Admin Panel</div>
+            </div>
+          </div>
+        </div>
+
+        <nav style={{ flex: 1, padding: "12px 0", overflow: "auto" }}>
+          {navItems.map(item => (
+            <div key={item.id} className={`admin-nav-item ${section === item.id ? "active" : ""}`} onClick={() => setSection(item.id)}>
+              <span style={{ fontSize: 16 }}>{item.icon}</span>
+              <span>{item.label}</span>
+            </div>
+          ))}
+        </nav>
+
+        <div style={{ padding: "12px 16px", borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <AvatarCircle initials="AD" size={34} color="#1A73E8" />
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 600 }}>Admin User</div>
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.5)" }}>Super Admin</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="admin-main">
+        {/* Admin Top Bar */}
+        <div style={{ background: "white", padding: "14px 24px", borderBottom: "1px solid #E5E7EB", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
+          <h3 style={{ fontSize: 16, fontWeight: 700, color: "#1C1C2E" }}>
+            {navItems.find(n => n.id === section)?.icon} {navItems.find(n => n.id === section)?.label}
+          </h3>
+          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+            <div style={{ position: "relative" }}>
+              <button style={{ background: "#F3F4F6", border: "none", borderRadius: 10, width: 36, height: 36, cursor: "pointer", fontSize: 16 }}>🔔</button>
+              <div style={{ position: "absolute", top: -4, right: -4, width: 16, height: 16, background: "#F44336", borderRadius: "50%", fontSize: 9, color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, border: "2px solid white" }}>5</div>
+            </div>
+            <AvatarCircle initials="AD" size={36} />
+          </div>
+        </div>
+        <div style={{ overflow: "auto", flex: 1 }}>
+          <div className="screen-enter">{renderSection()}</div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ============================================================
+// MAIN APP — Admin hidden behind 3x logo tap
+// ============================================================
+export default function FixMateApp() {
+  const [showAdmin, setShowAdmin] = useState(false);
+  const [tapCount, setTapCount] = useState(0);
+  const [showHint, setShowHint] = useState(false);
+  const tapTimer = useRef(null);
+
+  const handleLogoBgTap = () => {
+    const next = tapCount + 1;
+    setTapCount(next);
+    clearTimeout(tapTimer.current);
+
+    if (next === 1) setShowHint(true);
+
+    if (next >= 3) {
+      setShowAdmin(true);
+      setTapCount(0);
+      setShowHint(false);
+    } else {
+      tapTimer.current = setTimeout(() => {
+        setTapCount(0);
+        setShowHint(false);
+      }, 1500);
+    }
+  };
+
+  return (
+    <>
+      <style>{styles}</style>
+      <div className="fixmate-root" style={{ position: "relative" }}>
+
+        {/* ── PHONE ── */}
+        <div>
+          <div className="frame-label">📱 FixMate App</div>
+          <div className="phone-frame">
+            <div className="phone-notch" />
+            <div className="phone-screen">
+              <CustomerApp />
+            </div>
+          </div>
+        </div>
+
+        {/* ── HIDDEN ADMIN TRIGGER (logo area in background) ── */}
+        <div style={{ position: "fixed", bottom: 24, left: "50%", transform: "translateX(-50%)", zIndex: 999, display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+          {/* Tap counter hint */}
+          {showHint && (
+            <div className="animate-up" style={{ background: "rgba(255,255,255,0.15)", backdropFilter: "blur(10px)", borderRadius: 20, padding: "6px 16px", color: "white", fontSize: 12, fontWeight: 600, border: "1px solid rgba(255,255,255,0.2)" }}>
+              {tapCount === 1 ? "2 more taps..." : tapCount === 2 ? "1 more tap..." : ""}
+            </div>
+          )}
+          {/* Secret logo tap area */}
+          <div onClick={handleLogoBgTap}
+            style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", padding: "10px 20px", borderRadius: 20, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", transition: "all 0.2s", userSelect: "none" }}>
+            <div style={{ width: 32, height: 32, background: "linear-gradient(135deg,#1A73E8,#1557B0)", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>🔧</div>
+            <span style={{ color: "rgba(255,255,255,0.7)", fontWeight: 700, fontSize: 14, fontFamily: "'Space Grotesk',sans-serif", letterSpacing: 0.5 }}>FixMate</span>
+          </div>
+        </div>
+
+        {/* ── ADMIN PANEL MODAL ── */}
+        {showAdmin && (
+          <div className="animate-in" style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, backdropFilter: "blur(6px)" }}>
+            <div style={{ background: "white", borderRadius: 24, overflow: "hidden", width: "min(1000px, 100%)", height: "min(780px, 90vh)", display: "flex", flexDirection: "column", boxShadow: "0 40px 100px rgba(0,0,0,0.5)", border: "2px solid rgba(255,255,255,0.1)" }}>
+              {/* Admin panel header bar */}
+              <div style={{ background: "linear-gradient(135deg,#1C1C2E,#0D1421)", padding: "12px 20px", display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
+                <div style={{ width: 32, height: 32, background: "linear-gradient(135deg,#1A73E8,#1557B0)", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>🔧</div>
+                <div>
+                  <span style={{ color: "white", fontWeight: 800, fontSize: 15, fontFamily: "'Space Grotesk',sans-serif" }}>FixMate</span>
+                  <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginLeft: 8 }}>Admin Panel</span>
+                </div>
+                <div style={{ marginLeft: "auto", display: "flex", gap: 8, alignItems: "center" }}>
+                  <span className="badge badge-orange" style={{ fontSize: 10 }}>🔒 Private Access</span>
+                  <button onClick={() => setShowAdmin(false)}
+                    style={{ background: "rgba(255,255,255,0.08)", border: "none", borderRadius: 10, width: 36, height: 36, cursor: "pointer", color: "white", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }}>✕</button>
+                </div>
+              </div>
+              <div style={{ flex: 1, overflow: "hidden", display: "flex" }}>
+                <AdminDashboard />
+              </div>
+            </div>
+          </div>
+        )}
+
+      </div>
+    </>
+  );
+}
