@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>FixMate – Your Trusted Repair Partner</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blue: #2563EB;
+    --blue-dark: #1d4ed8;
+    --blue-light: #EFF6FF;
+    --orange: #F97316;
+    --orange-dark: #ea6c0a;
+    --bg: #F8FAFC;
+    --card: #FFFFFF;
+    --text: #111827;
+    --text2: #6B7280;
+    --text3: #9CA3AF;
+    --success: #22C55E;
+    --error: #EF4444;
+    --border: #E5E7EB;
+    --radius: 16px;
+    --shadow: 0 2px 12px rgba(0,0,0,0.08);
+    --shadow-md: 0 4px 24px rgba(0,0,0,0.12);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: #1a1a2e;
+    display: flex; justify-content: center; align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+  }
+  .phone {
+    width: 390px;
+    height: 844px;
+    background: var(--bg);
+    border-radius: 44px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.5), 0 0 0 2px rgba(255,255,255,0.1);
+  }
+  /* SCREENS */
+  .screen {
+    position: absolute; inset: 0;
+    overflow-y: auto; overflow-x: hidden;
+    display: none;
+    flex-direction: column;
+    background: var(--bg);
+    scrollbar-width: none;
+    padding-bottom: 80px;
+  }
+  .screen::-webkit-scrollbar { display: none; }
+  .screen.active { display: flex; }
+
+  /* SPLASH */
+  #splash {
+    background: linear-gradient(145deg, #2563EB 0%, #1d4ed8 40%, #F97316 100%);
+    justify-content: center; align-items: center;
+    padding: 0;
+    animation: splashIn 0.6s ease;
+  }
+  @keyframes splashIn { from { opacity: 0; transform: scale(1.1); } to { opacity: 1; transform: scale(1); } }
+  .splash-content { text-align: center; }
+  .splash-logo {
+    width: 100px; height: 100px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 28px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 24px;
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255,255,255,0.3);
+    animation: logoFloat 2s ease-in-out infinite;
+  }
+  @keyframes logoFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+  .splash-logo svg { width: 56px; height: 56px; }
+  .splash-title {
+    font-family: 'Nunito', sans-serif;
+    font-size: 42px; font-weight: 900;
+    color: white; letter-spacing: -1px;
+  }
+  .splash-sub { color: rgba(255,255,255,0.85); font-size: 16px; margin-top: 8px; font-weight: 500; }
+  .splash-dots { display: flex; gap: 8px; justify-content: center; margin-top: 48px; }
+  .splash-dots span {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: rgba(255,255,255,0.4);
+    animation: dotPulse 1.4s ease-in-out infinite;
+  }
+  .splash-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .splash-dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes dotPulse { 0%,80%,100% { transform: scale(0.8); opacity: 0.4; } 40% { transform: scale(1.2); opacity: 1; } }
+
+  /* LOGIN */
+  #login { padding: 0; justify-content: flex-start; }
+  .login-hero {
+    background: linear-gradient(160deg, #2563EB, #1e40af);
+    padding: 60px 28px 48px;
+    position: relative; overflow: hidden;
+  }
+  .login-hero::before {
+    content: ''; position: absolute;
+    width: 200px; height: 200px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 50%; top: -60px; right: -40px;
+  }
+  .login-hero::after {
+    content: ''; position: absolute;
+    width: 120px; height: 120px;
+    background: rgba(249,115,22,0.3);
+    border-radius: 50%; bottom: -30px; left: 20px;
+  }
+  .login-hero h1 { font-family:'Nunito',sans-serif; font-size:32px; font-weight:900; color:white; position:relative; z-index:1; }
+  .login-hero p { color:rgba(255,255,255,0.75); margin-top:8px; font-size:15px; position:relative; z-index:1; }
+  .login-body { padding: 32px 24px; }
+  .input-group { margin-bottom: 16px; }
+  .input-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text2); margin-bottom: 8px; }
+  .input-wrap {
+    display: flex; align-items: center; gap: 12px;
+    background: white; border: 1.5px solid var(--border);
+    border-radius: 14px; padding: 14px 16px;
+    transition: border-color 0.2s;
+  }
+  .input-wrap:focus-within { border-color: var(--blue); }
+  .input-wrap input { border: none; outline: none; flex: 1; font-size: 15px; font-family: 'DM Sans'; color: var(--text); background: transparent; }
+  .input-wrap svg { color: var(--text3); flex-shrink: 0; }
+  .btn-orange {
+    width: 100%; padding: 16px;
+    background: var(--orange); color: white;
+    border: none; border-radius: 14px;
+    font-size: 16px; font-weight: 700;
+    font-family: 'Nunito', sans-serif;
+    cursor: pointer; transition: all 0.2s;
+    box-shadow: 0 4px 16px rgba(249,115,22,0.35);
+    position: relative; overflow: hidden;
+  }
+  .btn-orange:active { transform: scale(0.97); }
+  .divider { display: flex; align-items: center; gap: 12px; margin: 20px 0; }
+  .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .divider span { font-size: 13px; color: var(--text3); }
+  .btn-google {
+    width: 100%; padding: 15px;
+    background: white; border: 1.5px solid var(--border);
+    border-radius: 14px; font-size: 15px; font-weight: 600;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
+    color: var(--text); transition: all 0.2s;
+  }
+  .btn-google:active { background: #f9fafb; transform: scale(0.97); }
+  .login-footer { text-align: center; margin-top: 24px; font-size: 13px; color: var(--text2); }
+  .login-footer a { color: var(--blue); font-weight: 600; cursor: pointer; }
+
+  /* TOP BAR */
+  .topbar {
+    background: var(--blue);
+    padding: 52px 20px 16px;
+    position: sticky; top: 0; z-index: 10;
+  }
+  .topbar-row1 { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .location { display: flex; align-items: center; gap: 6px; color: white; cursor: pointer; }
+  .location svg { width: 16px; height: 16px; opacity: 0.8; }
+  .location-text { font-size: 14px; font-weight: 600; }
+  .location-sub { font-size: 11px; opacity: 0.7; margin-top: 1px; }
+  .notif-btn {
+    width: 38px; height: 38px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 12px; border: none;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; position: relative;
+  }
+  .notif-dot {
+    position: absolute; top: 8px; right: 8px;
+    width: 8px; height: 8px; background: var(--orange);
+    border-radius: 50%; border: 2px solid var(--blue);
+  }
+  .searchbar {
+    display: flex; align-items: center; gap: 10px;
+    background: white; border-radius: 12px;
+    padding: 11px 14px;
+  }
+  .searchbar input {
+    border: none; outline: none; flex: 1;
+    font-size: 14px; color: var(--text); background: transparent;
+    font-family: 'DM Sans';
+  }
+  .searchbar input::placeholder { color: var(--text3); }
+
+  /* SECTION */
+  .section { padding: 20px 16px 0; }
+  .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .section-title { font-family: 'Nunito', sans-serif; font-size: 18px; font-weight: 800; color: var(--text); }
+  .section-link { font-size: 13px; color: var(--blue); font-weight: 600; cursor: pointer; }
+
+  /* CATEGORIES */
+  .categories-scroll { display: flex; gap: 10px; overflow-x: auto; padding: 0 16px 4px; scrollbar-width: none; }
+  .categories-scroll::-webkit-scrollbar { display: none; }
+  .cat-card {
+    flex-shrink: 0;
+    width: 82px;
+    background: white;
+    border-radius: 16px;
+    padding: 14px 8px;
+    text-align: center;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1.5px solid transparent;
+  }
+  .cat-card:active, .cat-card.active { border-color: var(--blue); background: var(--blue-light); transform: scale(0.96); }
+  .cat-icon {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 8px;
+    font-size: 22px;
+  }
+  .cat-name { font-size: 11px; font-weight: 600; color: var(--text); line-height: 1.3; }
+
+  /* EXPERT CARDS */
+  .experts-scroll { display: flex; gap: 12px; overflow-x: auto; padding: 0 16px 4px; scrollbar-width: none; }
+  .experts-scroll::-webkit-scrollbar { display: none; }
+  .expert-card {
+    flex-shrink: 0; width: 160px;
+    background: white; border-radius: var(--radius);
+    padding: 16px; box-shadow: var(--shadow);
+    cursor: pointer; transition: all 0.2s;
+    position: relative;
+  }
+  .expert-card:active { transform: scale(0.97); box-shadow: var(--shadow-md); }
+  .expert-badge {
+    position: absolute; top: 10px; right: 10px;
+    background: var(--success); color: white;
+    font-size: 9px; font-weight: 700;
+    padding: 2px 7px; border-radius: 20px;
+  }
+  .expert-avatar {
+    width: 56px; height: 56px; border-radius: 16px;
+    background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px; margin-bottom: 10px;
+  }
+  .expert-name { font-family: 'Nunito', sans-serif; font-size: 14px; font-weight: 800; color: var(--text); }
+  .expert-type { font-size: 12px; color: var(--text2); margin: 2px 0 8px; }
+  .expert-meta { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+  .rating { display: flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 600; color: #D97706; }
+  .distance { font-size: 11px; color: var(--text3); margin-left: auto; }
+  .btn-book {
+    width: 100%; padding: 9px;
+    background: var(--orange); color: white;
+    border: none; border-radius: 10px;
+    font-size: 12px; font-weight: 700;
+    cursor: pointer; transition: all 0.2s;
+    font-family: 'Nunito', sans-serif;
+  }
+  .btn-book:active { transform: scale(0.97); }
+
+  /* PROMO BANNER */
+  .promo-banner {
+    margin: 16px;
+    background: linear-gradient(135deg, #1d4ed8, #2563EB);
+    border-radius: 20px;
+    padding: 20px;
+    display: flex; justify-content: space-between; align-items: center;
+    position: relative; overflow: hidden;
+  }
+  .promo-banner::after {
+    content: ''; position: absolute;
+    width: 120px; height: 120px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 50%; right: -20px; top: -30px;
+  }
+  .promo-text h3 { font-family: 'Nunito', sans-serif; font-size: 16px; font-weight: 800; color: white; }
+  .promo-text p { font-size: 12px; color: rgba(255,255,255,0.75); margin-top: 4px; }
+  .promo-tag {
+    background: var(--orange); color: white;
+    padding: 8px 14px; border-radius: 10px;
+    font-size: 13px; font-weight: 800;
+    font-family: 'Nunito', sans-serif;
+    position: relative; z-index: 1;
+  }
+
+  /* SERVICE LIST */
+  .service-card {
+    background: white; border-radius: var(--radius);
+    margin: 0 16px 12px; padding: 14px;
+    box-shadow: var(--shadow); display: flex; gap: 12px;
+    cursor: pointer; transition: all 0.2s;
+    border: 1.5px solid transparent;
+  }
+  .service-card:active { border-color: var(--blue); transform: scale(0.99); }
+  .service-img {
+    width: 80px; height: 80px; border-radius: 12px;
+    background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 36px; flex-shrink: 0;
+  }
+  .service-info { flex: 1; }
+  .service-name { font-family: 'Nunito', sans-serif; font-size: 15px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+  .service-price { font-size: 13px; font-weight: 600; color: var(--blue); margin-bottom: 6px; }
+  .service-meta { display: flex; align-items: center; gap: 10px; }
+  .badge-tag {
+    background: var(--blue-light); color: var(--blue);
+    font-size: 11px; font-weight: 600;
+    padding: 3px 8px; border-radius: 6px;
+  }
+  .btn-book-sm {
+    background: var(--orange); color: white;
+    border: none; border-radius: 9px;
+    padding: 7px 14px; font-size: 12px; font-weight: 700;
+    cursor: pointer; margin-top: 8px;
+    font-family: 'Nunito', sans-serif;
+  }
+  .filter-row {
+    display: flex; gap: 8px; overflow-x: auto;
+    padding: 12px 16px; scrollbar-width: none;
+  }
+  .filter-row::-webkit-scrollbar { display: none; }
+  .filter-chip {
+    flex-shrink: 0;
+    padding: 8px 16px;
+    border-radius: 20px; border: 1.5px solid var(--border);
+    background: white; font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: all 0.2s; color: var(--text);
+  }
+  .filter-chip.active { background: var(--blue); color: white; border-color: var(--blue); }
+
+  /* DETAIL PAGE */
+  .detail-img {
+    width: 100%; height: 220px;
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 80px; flex-shrink: 0;
+    position: relative;
+  }
+  .back-btn {
+    position: absolute; top: 56px; left: 16px;
+    width: 40px; height: 40px;
+    background: white; border-radius: 12px;
+    border: none; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; box-shadow: var(--shadow-md);
+  }
+  .detail-body { padding: 20px 16px; }
+  .detail-title { font-family: 'Nunito', sans-serif; font-size: 24px; font-weight: 900; color: var(--text); }
+  .detail-price { font-size: 20px; font-weight: 700; color: var(--blue); margin: 6px 0 12px; }
+  .detail-rating-row { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .detail-rating { display: flex; align-items: center; gap: 4px; font-size: 15px; font-weight: 700; color: #D97706; }
+  .detail-reviews { font-size: 13px; color: var(--text2); }
+  .tech-row {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--blue-light); border-radius: 14px; padding: 14px;
+    margin-bottom: 16px;
+  }
+  .tech-avatar {
+    width: 48px; height: 48px; border-radius: 14px;
+    background: linear-gradient(135deg, #2563EB, #1d4ed8);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; flex-shrink: 0;
+  }
+  .tech-info { flex: 1; }
+  .tech-name { font-family: 'Nunito', sans-serif; font-weight: 800; color: var(--text); font-size: 15px; }
+  .tech-type { font-size: 12px; color: var(--text2); }
+  .section-desc { font-size: 14px; color: var(--text2); line-height: 1.6; margin-bottom: 20px; }
+  .upload-box {
+    border: 2px dashed var(--blue);
+    border-radius: 14px; padding: 24px;
+    text-align: center; cursor: pointer;
+    background: var(--blue-light); margin-bottom: 20px;
+    transition: all 0.2s;
+  }
+  .upload-box:active { transform: scale(0.98); }
+  .upload-box p { font-size: 13px; color: var(--blue); font-weight: 600; margin-top: 8px; }
+  .btn-confirm {
+    width: 100%; padding: 17px;
+    background: var(--orange); color: white;
+    border: none; border-radius: 14px;
+    font-size: 16px; font-weight: 700;
+    font-family: 'Nunito', sans-serif;
+    cursor: pointer; transition: all 0.2s;
+    box-shadow: 0 4px 16px rgba(249,115,22,0.35);
+  }
+  .btn-confirm:active { transform: scale(0.97); }
+
+  /* BOOKING */
+  .booking-section { padding: 16px 16px 0; }
+  .booking-section h3 { font-family: 'Nunito', sans-serif; font-size: 16px; font-weight: 800; color: var(--text); margin-bottom: 12px; }
+  .date-scroll { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+  .date-scroll::-webkit-scrollbar { display: none; }
+  .date-chip {
+    flex-shrink: 0; text-align: center;
+    width: 56px; padding: 10px 6px;
+    background: white; border-radius: 12px;
+    border: 1.5px solid var(--border); cursor: pointer;
+    transition: all 0.2s;
+  }
+  .date-chip.active { background: var(--blue); border-color: var(--blue); }
+  .date-chip .day { font-size: 11px; color: var(--text2); }
+  .date-chip .date { font-family: 'Nunito', sans-serif; font-size: 18px; font-weight: 800; color: var(--text); }
+  .date-chip.active .day, .date-chip.active .date { color: white; }
+  .time-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .time-chip {
+    text-align: center; padding: 11px;
+    background: white; border-radius: 12px;
+    border: 1.5px solid var(--border); cursor: pointer;
+    font-size: 13px; font-weight: 600; color: var(--text);
+    transition: all 0.2s;
+  }
+  .time-chip.active { background: var(--blue); color: white; border-color: var(--blue); }
+  .time-chip.unavailable { opacity: 0.4; cursor: not-allowed; }
+
+  /* TRACKING */
+  .map-area {
+    height: 280px;
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 50%, #e0f2fe 100%);
+    position: relative; overflow: hidden;
+  }
+  .map-grid {
+    position: absolute; inset: 0;
+    background-image: linear-gradient(rgba(37,99,235,0.08) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(37,99,235,0.08) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+  .map-pin {
+    position: absolute; bottom: 80px; left: 50%;
+    transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .map-pin-dot {
+    width: 48px; height: 48px;
+    background: var(--blue); border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 16px rgba(37,99,235,0.4);
+    animation: pinBounce 1.5s ease-in-out infinite;
+  }
+  @keyframes pinBounce { 0%,100% { transform: rotate(-45deg) translateY(0); } 50% { transform: rotate(-45deg) translateY(-6px); } }
+  .map-pin-dot span { transform: rotate(45deg); font-size: 22px; }
+  .map-tech-pin {
+    position: absolute; top: 80px; right: 80px;
+    width: 40px; height: 40px;
+    background: var(--orange); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; box-shadow: 0 4px 12px rgba(249,115,22,0.4);
+    animation: techMove 3s ease-in-out infinite;
+  }
+  @keyframes techMove { 0%,100% { transform: translate(0,0); } 50% { transform: translate(-10px, 10px); } }
+  .route-line {
+    position: absolute; top: 110px; right: 110px;
+    width: 2px; height: 140px;
+    background: repeating-linear-gradient(to bottom, var(--blue) 0, var(--blue) 8px, transparent 8px, transparent 14px);
+    transform: rotate(25deg); transform-origin: top;
+  }
+  .eta-card {
+    margin: 16px;
+    background: white; border-radius: var(--radius);
+    padding: 16px; box-shadow: var(--shadow);
+    display: flex; align-items: center; gap: 14px;
+  }
+  .eta-icon {
+    width: 52px; height: 52px;
+    background: var(--blue-light); border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .eta-text h3 { font-family: 'Nunito', sans-serif; font-size: 20px; font-weight: 900; color: var(--text); }
+  .eta-text p { font-size: 13px; color: var(--text2); }
+  .tracking-actions { display: flex; gap: 12px; padding: 0 16px; }
+  .track-btn {
+    flex: 1; padding: 14px;
+    border-radius: 14px; border: none;
+    font-size: 14px; font-weight: 700;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+    font-family: 'Nunito', sans-serif; transition: all 0.2s;
+  }
+  .track-btn.call { background: var(--success); color: white; }
+  .track-btn.chat { background: var(--blue); color: white; }
+  .track-btn:active { transform: scale(0.97); }
+
+  /* BOOKINGS */
+  .tab-row {
+    display: flex; padding: 16px 16px 0;
+    border-bottom: 1.5px solid var(--border);
+    gap: 24px;
+  }
+  .tab {
+    padding-bottom: 14px; font-size: 15px; font-weight: 600;
+    color: var(--text2); cursor: pointer; border-bottom: 2.5px solid transparent;
+    transition: all 0.2s;
+  }
+  .tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+  .booking-card {
+    background: white; border-radius: var(--radius);
+    margin: 12px 16px 0; padding: 16px;
+    box-shadow: var(--shadow);
+  }
+  .booking-card-top { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .booking-icon {
+    width: 48px; height: 48px; border-radius: 14px;
+    background: var(--blue-light);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; flex-shrink: 0;
+  }
+  .booking-info { flex: 1; }
+  .booking-name { font-family: 'Nunito', sans-serif; font-size: 15px; font-weight: 800; color: var(--text); }
+  .booking-tech { font-size: 13px; color: var(--text2); margin-top: 2px; }
+  .status-badge {
+    padding: 5px 10px; border-radius: 8px;
+    font-size: 11px; font-weight: 700;
+  }
+  .status-active { background: #FEF3C7; color: #D97706; }
+  .status-done { background: #DCFCE7; color: #16A34A; }
+  .booking-footer { display: flex; align-items: center; gap: 8px; padding-top: 12px; border-top: 1px solid var(--border); }
+  .booking-date { font-size: 12px; color: var(--text3); flex: 1; }
+  .btn-track { background: var(--blue); color: white; border: none; border-radius: 8px; padding: 7px 14px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: 'Nunito', sans-serif; }
+
+  /* CHAT */
+  .chat-header {
+    background: var(--blue); padding: 52px 16px 16px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .chat-avatar {
+    width: 42px; height: 42px; border-radius: 14px;
+    background: rgba(255,255,255,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+  }
+  .chat-info h3 { font-family: 'Nunito', sans-serif; font-size: 16px; font-weight: 800; color: white; }
+  .chat-info p { font-size: 12px; color: rgba(255,255,255,0.75); }
+  .chat-online { display: flex; align-items: center; gap: 4px; }
+  .online-dot { width: 7px; height: 7px; background: var(--success); border-radius: 50%; }
+  .chat-messages { flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
+  .msg { max-width: 75%; }
+  .msg.received { align-self: flex-start; }
+  .msg.sent { align-self: flex-end; }
+  .msg-bubble {
+    padding: 11px 14px; border-radius: 16px;
+    font-size: 14px; line-height: 1.5;
+  }
+  .msg.received .msg-bubble { background: white; color: var(--text); border-bottom-left-radius: 4px; box-shadow: var(--shadow); }
+  .msg.sent .msg-bubble { background: var(--blue); color: white; border-bottom-right-radius: 4px; }
+  .msg-time { font-size: 11px; color: var(--text3); margin-top: 4px; padding: 0 4px; }
+  .msg.sent .msg-time { text-align: right; }
+  .chat-input {
+    padding: 12px 16px;
+    display: flex; align-items: center; gap: 10px;
+    background: white; border-top: 1px solid var(--border);
+  }
+  .chat-input input {
+    flex: 1; border: 1.5px solid var(--border); border-radius: 24px;
+    padding: 11px 16px; font-size: 14px; outline: none;
+    font-family: 'DM Sans'; color: var(--text);
+    transition: border-color 0.2s;
+  }
+  .chat-input input:focus { border-color: var(--blue); }
+  .send-btn {
+    width: 44px; height: 44px;
+    background: var(--blue); border: none; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; flex-shrink: 0; transition: all 0.2s;
+  }
+  .send-btn:active { transform: scale(0.95); }
+
+  /* PROFILE */
+  .profile-hero {
+    background: linear-gradient(160deg, #2563EB, #1d4ed8);
+    padding: 56px 20px 32px; text-align: center;
+  }
+  .profile-avatar {
+    width: 80px; height: 80px; border-radius: 24px;
+    background: rgba(255,255,255,0.2);
+    border: 3px solid rgba(255,255,255,0.4);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 40px; margin: 0 auto 14px;
+  }
+  .profile-name { font-family: 'Nunito', sans-serif; font-size: 22px; font-weight: 900; color: white; }
+  .profile-email { font-size: 13px; color: rgba(255,255,255,0.7); margin-top: 4px; }
+  .profile-stats { display: flex; justify-content: center; gap: 32px; margin-top: 20px; }
+  .stat { text-align: center; }
+  .stat-num { font-family: 'Nunito', sans-serif; font-size: 22px; font-weight: 900; color: white; }
+  .stat-label { font-size: 11px; color: rgba(255,255,255,0.65); }
+  .profile-menu { padding: 16px; }
+  .menu-item {
+    display: flex; align-items: center; gap: 14px;
+    background: white; border-radius: 14px; padding: 16px;
+    margin-bottom: 10px; cursor: pointer; transition: all 0.2s;
+    box-shadow: var(--shadow);
+  }
+  .menu-item:active { transform: scale(0.98); }
+  .menu-icon {
+    width: 42px; height: 42px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center; font-size: 20px;
+    flex-shrink: 0;
+  }
+  .menu-item h4 { font-weight: 700; color: var(--text); font-size: 15px; }
+  .menu-item p { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .menu-arrow { margin-left: auto; color: var(--text3); }
+
+  /* BOTTOM NAV */
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 390px; height: 76px;
+    background: white;
+    border-top: 1px solid var(--border);
+    display: flex; align-items: center;
+    padding: 0 8px 10px;
+    z-index: 100;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+  }
+  .nav-item {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    gap: 4px; cursor: pointer; padding: 8px 4px 0;
+    transition: all 0.2s; position: relative;
+  }
+  .nav-item svg { width: 22px; height: 22px; }
+  .nav-label { font-size: 10px; font-weight: 600; color: var(--text3); }
+  .nav-item.active svg { color: var(--blue); }
+  .nav-item.active .nav-label { color: var(--blue); }
+  .nav-item.active::after {
+    content: ''; position: absolute;
+    top: 0; width: 28px; height: 3px;
+    background: var(--blue); border-radius: 0 0 3px 3px;
+  }
+  .nav-center { flex: 1; display: flex; justify-content: center; align-items: flex-start; padding-top: 0; }
+  .fab {
+    width: 56px; height: 56px;
+    background: var(--orange); border-radius: 18px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 16px rgba(249,115,22,0.4);
+    cursor: pointer; transition: all 0.2s;
+    margin-top: -20px;
+    border: 3px solid white;
+  }
+  .fab:active { transform: scale(0.93); }
+
+  /* PAGE HEADER */
+  .page-header {
+    background: var(--blue); padding: 52px 16px 16px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .page-back {
+    width: 36px; height: 36px; border-radius: 12px;
+    background: rgba(255,255,255,0.15);
+    border: none; display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+  }
+  .page-title { font-family: 'Nunito', sans-serif; font-size: 20px; font-weight: 800; color: white; }
+
+  /* ANIMATIONS */
+  .fade-in { animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* SPLASH AUTO */
+  #splash { cursor: pointer; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+
+  <!-- SPLASH -->
+  <div class="screen active" id="splash" onclick="goTo('login')">
+    <div class="splash-content">
+      <div class="splash-logo">
+        <svg viewBox="0 0 56 56" fill="none">
+          <path d="M28 8L8 18V38L28 48L48 38V18L28 8Z" fill="rgba(255,255,255,0.3)" stroke="white" stroke-width="2"/>
+          <path d="M20 28L24 32L36 22" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="28" cy="28" r="8" fill="rgba(255,255,255,0.2)" stroke="white" stroke-width="1.5"/>
+        </svg>
+      </div>
+      <div class="splash-title">FixMate</div>
+      <div class="splash-sub">Your Trusted Repair Partner</div>
+      <div class="splash-dots">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOGIN -->
+  <div class="screen" id="login">
+    <div class="login-hero">
+      <h1>Welcome to FixMate 👋</h1>
+      <p>Book trusted repair experts near you</p>
+    </div>
+    <div class="login-body">
+      <div class="input-group">
+        <label>Phone Number</label>
+        <div class="input-wrap">
+          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+          <input type="tel" placeholder="+91 98765 43210">
+        </div>
+      </div>
+      <div class="input-group">
+        <label>OTP Verification</label>
+        <div class="input-wrap">
+          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+          <input type="text" placeholder="Enter 6-digit OTP">
+        </div>
+      </div>
+      <button class="btn-orange" onclick="goTo('home')">Continue with Phone →</button>
+      <div class="divider"><span>or</span></div>
+      <button class="btn-google" onclick="goTo('home')">
+        <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20H24v8h11.3C33.7 33 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.7 1.1 7.8 2.9l5.7-5.7C34 6.4 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 20-8 20-20 0-1.3-.1-2.7-.4-4z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.5 16 19 13 24 13c3 0 5.7 1.1 7.8 2.9l5.7-5.7C34 6.4 29.3 4 24 4 16.3 4 9.7 8.4 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-1.9 13.4-5.1l-6.2-5.2C29.5 35.5 26.9 36 24 36c-5.2 0-9.7-3-11.3-7.5l-6.6 5.1C9.5 40 16.3 44 24 44z"/><path fill="#1976D2" d="M43.6 20H24v8h11.3c-.8 2.2-2.3 4-4.3 5.3l6.2 5.2C40.9 35.5 44 30.2 44 24c0-1.3-.1-2.7-.4-4z"/></svg>
+        Sign in with Google
+      </button>
+      <div class="login-footer">New to FixMate? <a onclick="goTo('home')">Create Account</a></div>
+    </div>
+  </div>
+
+  <!-- HOME -->
+  <div class="screen" id="home">
+    <div class="topbar">
+      <div class="topbar-row1">
+        <div class="location">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+          <div>
+            <div class="location-text">Thane, Maharashtra</div>
+            <div class="location-sub">▼ Change location</div>
+          </div>
+        </div>
+        <button class="notif-btn" onclick="goTo('bookings')">
+          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+          <div class="notif-dot"></div>
+        </button>
+      </div>
+      <div class="searchbar">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#9CA3AF" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input type="text" placeholder="Search AC repair, plumbing, bike repair...">
+      </div>
+    </div>
+
+    <div class="promo-banner">
+      <div class="promo-text">
+        <h3>First Booking Free! 🎉</h3>
+        <p>Use code FIXFREE on your first service</p>
+      </div>
+      <div class="promo-tag">CLAIM →</div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">Services</div>
+        <div class="section-link" onclick="goTo('services')">See all</div>
+      </div>
+    </div>
+    <div class="categories-scroll">
+      <div class="cat-card active" onclick="goTo('services')">
+        <div class="cat-icon" style="background:#EFF6FF">⚡</div>
+        <div class="cat-name">Electrician</div>
+      </div>
+      <div class="cat-card" onclick="goTo('services')">
+        <div class="cat-icon" style="background:#F0FDF4">🔧</div>
+        <div class="cat-name">Plumber</div>
+      </div>
+      <div class="cat-card" onclick="goTo('services')">
+        <div class="cat-icon" style="background:#FFF7ED">❄️</div>
+        <div class="cat-name">AC Repair</div>
+      </div>
+      <div class="cat-card" onclick="goTo('services')">
+        <div class="cat-icon" style="background:#FDF4FF">🏍️</div>
+        <div class="cat-name">Bike Repair</div>
+      </div>
+      <div class="cat-card" onclick="goTo('services')">
+        <div class="cat-icon" style="background:#FFF1F2">📱</div>
+        <div class="cat-name">Mobile Repair</div>
+      </div>
+      <div class="cat-card" onclick="goTo('services')">
+        <div class="cat-icon" style="background:#F0FDF4">🪚</div>
+        <div class="cat-name">Carpenter</div>
+      </div>
+      <div class="cat-card" onclick="goTo('services')">
+        <div class="cat-icon" style="background:#FFFBEB">📺</div>
+        <div class="cat-name">TV Repair</div>
+      </div>
+      <div class="cat-card" onclick="goTo('services')">
+        <div class="cat-icon" style="background:#EFF6FF">🍳</div>
+        <div class="cat-name">Appliance</div>
+      </div>
+    </div>
+
+    <div class="section" style="margin-top:20px">
+      <div class="section-header">
+        <div class="section-title">Top Rated Experts Near You</div>
+        <div class="section-link">See all</div>
+      </div>
+    </div>
+    <div class="experts-scroll">
+      <div class="expert-card" onclick="goTo('detail')">
+        <div class="expert-badge">⭐ TOP</div>
+        <div class="expert-avatar">👨‍🔧</div>
+        <div class="expert-name">Rahul Sharma</div>
+        <div class="expert-type">Electrician</div>
+        <div class="expert-meta">
+          <div class="rating">⭐ 4.9</div>
+          <div class="distance">1.2 km</div>
+        </div>
+        <button class="btn-book" onclick="event.stopPropagation(); goTo('booking')">Book Now</button>
+      </div>
+      <div class="expert-card" onclick="goTo('detail')">
+        <div class="expert-badge">✅ PRO</div>
+        <div class="expert-avatar">👨‍🔩</div>
+        <div class="expert-name">Suresh Kumar</div>
+        <div class="expert-type">Plumber</div>
+        <div class="expert-meta">
+          <div class="rating">⭐ 4.8</div>
+          <div class="distance">0.8 km</div>
+        </div>
+        <button class="btn-book" onclick="event.stopPropagation(); goTo('booking')">Book Now</button>
+      </div>
+      <div class="expert-card" onclick="goTo('detail')">
+        <div class="expert-badge">⭐ TOP</div>
+        <div class="expert-avatar">🧑‍💻</div>
+        <div class="expert-name">Amit Patel</div>
+        <div class="expert-type">AC Repair</div>
+        <div class="expert-meta">
+          <div class="rating">⭐ 4.7</div>
+          <div class="distance">2.1 km</div>
+        </div>
+        <button class="btn-book" onclick="event.stopPropagation(); goTo('booking')">Book Now</button>
+      </div>
+      <div class="expert-card" onclick="goTo('detail')">
+        <div class="expert-badge">✅ PRO</div>
+        <div class="expert-avatar">👷‍♂️</div>
+        <div class="expert-name">Vikram Singh</div>
+        <div class="expert-type">Bike Repair</div>
+        <div class="expert-meta">
+          <div class="rating">⭐ 4.6</div>
+          <div class="distance">1.7 km</div>
+        </div>
+        <button class="btn-book" onclick="event.stopPropagation(); goTo('booking')">Book Now</button>
+      </div>
+    </div>
+    <div style="height:16px"></div>
+  </div>
+
+  <!-- SERVICES -->
+  <div class="screen" id="services">
+    <div class="page-header">
+      <button class="page-back" onclick="goTo('home')">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2.5"><path d="M15 19l-7-7 7-7"/></svg>
+      </button>
+      <div class="page-title">All Services</div>
+    </div>
+    <div class="filter-row">
+      <div class="filter-chip active">All</div>
+      <div class="filter-chip">Near Me</div>
+      <div class="filter-chip">Top Rated</div>
+      <div class="filter-chip">Price: Low-High</div>
+      <div class="filter-chip">Instant</div>
+    </div>
+    <div style="height:8px"></div>
+
+    <div class="service-card fade-in" onclick="goTo('detail')">
+      <div class="service-img">⚡</div>
+      <div class="service-info">
+        <div class="service-name">Electrical Repair</div>
+        <div class="service-price">₹299 – ₹999</div>
+        <div class="service-meta">
+          <div class="rating">⭐ 4.9</div>
+          <div class="badge-tag">Thane</div>
+        </div>
+        <button class="btn-book-sm" onclick="event.stopPropagation(); goTo('detail')">Book Service</button>
+      </div>
+    </div>
+
+    <div class="service-card fade-in" onclick="goTo('detail')">
+      <div class="service-img">🔧</div>
+      <div class="service-info">
+        <div class="service-name">Plumbing Service</div>
+        <div class="service-price">₹249 – ₹799</div>
+        <div class="service-meta">
+          <div class="rating">⭐ 4.8</div>
+          <div class="badge-tag">Thane</div>
+        </div>
+        <button class="btn-book-sm" onclick="event.stopPropagation(); goTo('detail')">Book Service</button>
+      </div>
+    </div>
+
+    <div class="service-card fade-in" onclick="goTo('detail')">
+      <div class="service-img">❄️</div>
+      <div class="service-info">
+        <div class="service-name">AC Service & Repair</div>
+        <div class="service-price">₹499 – ₹1499</div>
+        <div class="service-meta">
+          <div class="rating">⭐ 4.7</div>
+          <div class="badge-tag">Thane</div>
+        </div>
+        <button class="btn-book-sm" onclick="event.stopPropagation(); goTo('detail')">Book Service</button>
+      </div>
+    </div>
+
+    <div class="service-card fade-in" onclick="goTo('detail')">
+      <div class="service-img">🏍️</div>
+      <div class="service-info">
+        <div class="service-name">Bike Repair</div>
+        <div class="service-price">₹199 – ₹599</div>
+        <div class="service-meta">
+          <div class="rating">⭐ 4.6</div>
+          <div class="badge-tag">Thane</div>
+        </div>
+        <button class="btn-book-sm" onclick="event.stopPropagation(); goTo('detail')">Book Service</button>
+      </div>
+    </div>
+
+    <div class="service-card fade-in" onclick="goTo('detail')">
+      <div class="service-img">📱</div>
+      <div class="service-info">
+        <div class="service-name">Mobile Repair</div>
+        <div class="service-price">₹199 – ₹799</div>
+        <div class="service-meta">
+          <div class="rating">⭐ 4.8</div>
+          <div class="badge-tag">Thane</div>
+        </div>
+        <button class="btn-book-sm" onclick="event.stopPropagation(); goTo('detail')">Book Service</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DETAIL -->
+  <div class="screen" id="detail">
+    <div class="detail-img">
+      ⚡
+      <button class="back-btn" onclick="goTo('services')">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#111827" stroke-width="2.5"><path d="M15 19l-7-7 7-7"/></svg>
+      </button>
+    </div>
+    <div class="detail-body fade-in">
+      <div class="detail-title">Electrical Repair & Wiring</div>
+      <div class="detail-price">₹299 – ₹999</div>
+      <div class="detail-rating-row">
+        <div class="detail-rating">⭐ 4.9</div>
+        <div class="detail-reviews">(238 reviews)</div>
+        <div class="badge-tag" style="margin-left:auto">✅ Verified</div>
+      </div>
+
+      <div class="tech-row">
+        <div class="tech-avatar">👨‍🔧</div>
+        <div class="tech-info">
+          <div class="tech-name">Rahul Sharma</div>
+          <div class="tech-type">Senior Electrician • 8 yrs exp • 1.2 km away</div>
+        </div>
+        <div class="rating" style="font-size:14px">⭐ 4.9</div>
+      </div>
+
+      <div style="margin-bottom:6px"><strong style="font-size:15px;color:var(--text)">About This Service</strong></div>
+      <div class="section-desc">Professional electrical repair for home and office. We handle wiring, switchboard fixing, MCB replacement, fan installation, and more. All work guaranteed with 30-day warranty. Our certified electricians arrive with all tools needed.</div>
+
+      <div style="margin-bottom:12px"><strong style="font-size:15px;color:var(--text)">📷 Upload Problem Photo</strong></div>
+      <div class="upload-box" id="uploadBox" onclick="handleUpload()">
+        <div style="font-size:36px" id="uploadIcon">📷</div>
+        <p id="uploadText">Tap to upload a photo of your problem</p>
+        <p style="font-size:11px;color:var(--text3);margin-top:4px">Auto-compressed • Max 300KB</p>
+      </div>
+
+      <button class="btn-confirm" onclick="goTo('booking')">Confirm Booking →</button>
+    </div>
+  </div>
+
+  <!-- BOOKING -->
+  <div class="screen" id="booking">
+    <div class="page-header">
+      <button class="page-back" onclick="goTo('detail')">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2.5"><path d="M15 19l-7-7 7-7"/></svg>
+      </button>
+      <div class="page-title">Schedule Booking</div>
+    </div>
+
+    <div class="booking-section">
+      <div class="tech-row" style="margin-bottom:20px">
+        <div class="tech-avatar">👨‍🔧</div>
+        <div class="tech-info">
+          <div class="tech-name">Rahul Sharma</div>
+          <div class="tech-type">Electrician • ⭐ 4.9 • 1.2 km</div>
+        </div>
+        <div style="font-size:13px;font-weight:700;color:var(--blue)">₹499</div>
+      </div>
+
+      <h3>Select Date</h3>
+      <div class="date-scroll">
+        <div class="date-chip"><div class="day">Tue</div><div class="date">10</div></div>
+        <div class="date-chip active"><div class="day">Wed</div><div class="date">11</div></div>
+        <div class="date-chip"><div class="day">Thu</div><div class="date">12</div></div>
+        <div class="date-chip"><div class="day">Fri</div><div class="date">13</div></div>
+        <div class="date-chip"><div class="day">Sat</div><div class="date">14</div></div>
+        <div class="date-chip"><div class="day">Sun</div><div class="date">15</div></div>
+      </div>
+    </div>
+
+    <div class="booking-section" style="margin-top:20px">
+      <h3>Select Time Slot</h3>
+      <div class="time-grid">
+        <div class="time-chip unavailable">8:00 AM</div>
+        <div class="time-chip">9:00 AM</div>
+        <div class="time-chip active">10:00 AM</div>
+        <div class="time-chip">11:00 AM</div>
+        <div class="time-chip">12:00 PM</div>
+        <div class="time-chip unavailable">1:00 PM</div>
+        <div class="time-chip">2:00 PM</div>
+        <div class="time-chip">3:00 PM</div>
+        <div class="time-chip">4:00 PM</div>
+      </div>
+    </div>
+
+    <div class="booking-section" style="margin-top:20px;padding-bottom:20px">
+      <div class="service-card" style="margin:0;flex-direction:column;gap:8px">
+        <div style="display:flex;justify-content:space-between"><span style="font-size:14px;color:var(--text2)">Service Charge</span><span style="font-weight:600">₹499</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="font-size:14px;color:var(--text2)">Visiting Fee</span><span style="font-weight:600">₹0</span></div>
+        <div style="height:1px;background:var(--border)"></div>
+        <div style="display:flex;justify-content:space-between"><span style="font-weight:700">Total</span><span style="font-weight:800;color:var(--blue);font-size:16px">₹499</span></div>
+      </div>
+      <button class="btn-confirm" style="margin-top:16px" onclick="goTo('tracking')">🔒 Confirm & Pay →</button>
+    </div>
+  </div>
+
+  <!-- TRACKING -->
+  <div class="screen" id="tracking" style="padding-bottom:80px">
+    <div class="page-header">
+      <button class="page-back" onclick="goTo('bookings')">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2.5"><path d="M15 19l-7-7 7-7"/></svg>
+      </button>
+      <div class="page-title">Live Tracking</div>
+    </div>
+
+    <div class="map-area">
+      <div class="map-grid"></div>
+      <div class="route-line"></div>
+      <div class="map-tech-pin">🏍️</div>
+      <div class="map-pin">
+        <div class="map-pin-dot"><span>🏠</span></div>
+      </div>
+    </div>
+
+    <div class="eta-card fade-in">
+      <div class="eta-icon">
+        <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="#2563EB" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </div>
+      <div class="eta-text">
+        <h3>8 min away</h3>
+        <p>Rahul Sharma is on the way to your location</p>
+      </div>
+    </div>
+
+    <div class="tracking-actions">
+      <button class="track-btn call">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+        Call Technician
+      </button>
+      <button class="track-btn chat" onclick="goTo('chat')">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+        Chat Technician
+      </button>
+    </div>
+
+    <div style="margin:16px">
+      <div class="booking-card">
+        <div class="booking-card-top">
+          <div class="booking-icon">⚡</div>
+          <div class="booking-info">
+            <div class="booking-name">Electrical Repair</div>
+            <div class="booking-tech">Rahul Sharma</div>
+          </div>
+          <div class="status-badge status-active">En Route</div>
+        </div>
+        <div style="display:flex;gap:8px;font-size:13px;color:var(--text2)">
+          <span>📅 Wed, Mar 11</span>
+          <span>⏰ 10:00 AM</span>
+          <span style="margin-left:auto;font-weight:700;color:var(--blue)">₹499</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOOKINGS -->
+  <div class="screen" id="bookings">
+    <div class="page-header">
+      <button class="page-back" onclick="goTo('home')">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2.5"><path d="M15 19l-7-7 7-7"/></svg>
+      </button>
+      <div class="page-title">My Bookings</div>
+    </div>
+
+    <div class="tab-row">
+      <div class="tab active">Active (2)</div>
+      <div class="tab">Completed (8)</div>
+    </div>
+
+    <div class="booking-card fade-in" style="margin-top:16px">
+      <div class="booking-card-top">
+        <div class="booking-icon">⚡</div>
+        <div class="booking-info">
+          <div class="booking-name">Electrical Repair</div>
+          <div class="booking-tech">Rahul Sharma</div>
+        </div>
+        <div class="status-badge status-active">En Route</div>
+      </div>
+      <div class="booking-footer">
+        <div class="booking-date">📅 Wed, Mar 11 • 10:00 AM</div>
+        <button class="btn-track" onclick="goTo('tracking')">Track →</button>
+      </div>
+    </div>
+
+    <div class="booking-card fade-in">
+      <div class="booking-card-top">
+        <div class="booking-icon">❄️</div>
+        <div class="booking-info">
+          <div class="booking-name">AC Service</div>
+          <div class="booking-tech">Amit Patel</div>
+        </div>
+        <div class="status-badge" style="background:#EFF6FF;color:var(--blue)">Confirmed</div>
+      </div>
+      <div class="booking-footer">
+        <div class="booking-date">📅 Thu, Mar 12 • 2:00 PM</div>
+        <button class="btn-track" onclick="goTo('chat')">Chat →</button>
+      </div>
+    </div>
+
+    <div class="booking-card fade-in">
+      <div class="booking-card-top">
+        <div class="booking-icon">🔧</div>
+        <div class="booking-info">
+          <div class="booking-name">Plumbing Fix</div>
+          <div class="booking-tech">Suresh Kumar</div>
+        </div>
+        <div class="status-badge status-done">Completed</div>
+      </div>
+      <div class="booking-footer">
+        <div class="booking-date">📅 Sun, Mar 8 • 11:00 AM</div>
+        <button class="btn-track" style="background:var(--text3)">Review</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHAT -->
+  <div class="screen" id="chat" style="padding-bottom:0">
+    <div class="chat-header">
+      <button class="page-back" onclick="goTo('tracking')" style="background:rgba(255,255,255,0.15);border:none;width:36px;height:36px;border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2.5"><path d="M15 19l-7-7 7-7"/></svg>
+      </button>
+      <div class="chat-avatar">👨‍🔧</div>
+      <div class="chat-info">
+        <h3>Rahul Sharma</h3>
+        <div class="chat-online"><div class="online-dot"></div><p>Online now</p></div>
+      </div>
+    </div>
+
+    <div class="chat-messages fade-in">
+      <div class="msg received">
+        <div class="msg-bubble">Hello! I've accepted your booking for electrical repair. I'll be there by 10 AM.</div>
+        <div class="msg-time">9:42 AM</div>
+      </div>
+      <div class="msg sent">
+        <div class="msg-bubble">Great! Please bring a replacement switchboard for the bedroom.</div>
+        <div class="msg-time">9:44 AM</div>
+      </div>
+      <div class="msg received">
+        <div class="msg-bubble">Sure, I'll bring a standard 8-module switchboard. Can you confirm the brand preference?</div>
+        <div class="msg-time">9:45 AM</div>
+      </div>
+      <div class="msg sent">
+        <div class="msg-bubble">Legrand would be great if available!</div>
+        <div class="msg-time">9:46 AM</div>
+      </div>
+      <div class="msg received">
+        <div class="msg-bubble">Perfect! I have that. I'm on my way now, ETA 8 minutes 🏍️</div>
+        <div class="msg-time">9:52 AM</div>
+      </div>
+    </div>
+
+    <div class="chat-input">
+      <input type="text" placeholder="Type a message...">
+      <button class="send-btn">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- PROFILE -->
+  <div class="screen" id="profile">
+    <div class="profile-hero">
+      <div class="profile-avatar">😊</div>
+      <div class="profile-name">Arjun Desai</div>
+      <div class="profile-email">arjun.desai@gmail.com</div>
+      <div class="profile-stats">
+        <div class="stat"><div class="stat-num">12</div><div class="stat-label">Bookings</div></div>
+        <div class="stat"><div class="stat-num">4.8</div><div class="stat-label">Rating</div></div>
+        <div class="stat"><div class="stat-num">₹2.4k</div><div class="stat-label">Saved</div></div>
+      </div>
+    </div>
+
+    <div class="profile-menu">
+      <div class="menu-item">
+        <div class="menu-icon" style="background:#EFF6FF">📍</div>
+        <div>
+          <h4>Saved Addresses</h4>
+          <p>Home, Office & more</p>
+        </div>
+        <div class="menu-arrow">›</div>
+      </div>
+      <div class="menu-item">
+        <div class="menu-icon" style="background:#F0FDF4">💳</div>
+        <div>
+          <h4>Payment Methods</h4>
+          <p>UPI, Cards, Wallets</p>
+        </div>
+        <div class="menu-arrow">›</div>
+      </div>
+      <div class="menu-item">
+        <div class="menu-icon" style="background:#FFFBEB">🎁</div>
+        <div>
+          <h4>Offers & Coupons</h4>
+          <p>3 offers available</p>
+        </div>
+        <div class="menu-arrow">›</div>
+      </div>
+      <div class="menu-item">
+        <div class="menu-icon" style="background:#FFF1F2">🛡️</div>
+        <div>
+          <h4>Help & Support</h4>
+          <p>FAQs, Contact us</p>
+        </div>
+        <div class="menu-arrow">›</div>
+      </div>
+      <div class="menu-item" onclick="goTo('login')">
+        <div class="menu-icon" style="background:#FEF2F2">🚪</div>
+        <div>
+          <h4>Sign Out</h4>
+          <p>See you soon!</p>
+        </div>
+        <div class="menu-arrow">›</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav" id="bottomNav">
+    <div class="nav-item active" id="nav-home" onclick="goTo('home')">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span class="nav-label">Home</span>
+    </div>
+    <div class="nav-item" id="nav-bookings" onclick="goTo('bookings')">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      <span class="nav-label">Bookings</span>
+    </div>
+    <div class="nav-center">
+      <div class="fab" onclick="goTo('services')">
+        <svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2.5"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+      </div>
+    </div>
+    <div class="nav-item" id="nav-chat" onclick="goTo('chat')">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+      <span class="nav-label">Chat</span>
+    </div>
+    <div class="nav-item" id="nav-profile" onclick="goTo('profile')">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span class="nav-label">Profile</span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const navScreens = ['home','bookings','chat','profile'];
+  let currentScreen = 'splash';
+
+  function goTo(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    const el = document.getElementById(id);
+    if (el) {
+      el.classList.add('active');
+      el.scrollTop = 0;
+      currentScreen = id;
+    }
+    // Show/hide nav
+    const nav = document.getElementById('bottomNav');
+    const hideNav = ['splash','login','chat'].includes(id);
+    nav.style.display = hideNav ? 'none' : 'flex';
+    // Active nav
+    document.querySelectorAll('.nav-item[id^="nav-"]').forEach(n => n.classList.remove('active'));
+    const ni = document.getElementById('nav-' + id);
+    if (ni) ni.classList.add('active');
+  }
+
+  function handleUpload() {
+    const box = document.getElementById('uploadBox');
+    const icon = document.getElementById('uploadIcon');
+    const text = document.getElementById('uploadText');
+    icon.textContent = '✅';
+    text.textContent = 'problem_photo.jpg uploaded (284 KB)';
+    box.style.borderColor = 'var(--success)';
+    box.style.background = '#F0FDF4';
+    text.style.color = 'var(--success)';
+  }
+
+  // Date/time chip clicks
+  document.querySelectorAll('.date-chip').forEach(c => {
+    c.addEventListener('click', () => {
+      document.querySelectorAll('.date-chip').forEach(x => x.classList.remove('active'));
+      c.classList.add('active');
+    });
+  });
+  document.querySelectorAll('.time-chip:not(.unavailable)').forEach(c => {
+    c.addEventListener('click', () => {
+      document.querySelectorAll('.time-chip').forEach(x => x.classList.remove('active'));
+      c.classList.add('active');
+    });
+  });
+  document.querySelectorAll('.filter-chip').forEach(c => {
+    c.addEventListener('click', () => {
+      document.querySelectorAll('.filter-chip').forEach(x => x.classList.remove('active'));
+      c.classList.add('active');
+    });
+  });
+  document.querySelectorAll('.cat-card').forEach(c => {
+    c.addEventListener('click', () => {
+      document.querySelectorAll('.cat-card').forEach(x => x.classList.remove('active'));
+      c.classList.add('active');
+    });
+  });
+
+  // Auto splash
+  setTimeout(() => goTo('login'), 2800);
+</script>
+</body>
+</html>
